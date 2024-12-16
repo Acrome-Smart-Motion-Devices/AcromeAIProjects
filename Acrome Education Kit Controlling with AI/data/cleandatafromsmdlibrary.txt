@@ -1,0 +1,3335 @@
+*GitHub Repository "Acrome-Smart-Motor-Driver/python-library"*
+
+'''--- .github/workflows/python-package.yml ---
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
+
+on:
+  push:
+    branches: [ "master", "dev" ]
+  pull_request:
+    branches: [ "master", "dev" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    # Comment out test phase
+    #- name: Test with pytest
+    #  run: |
+    #    pytest
+
+'''
+'''--- .github/workflows/python-publish.yml ---
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Upload Python Package
+
+on:
+  release:
+    types: [released, prereleased]
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build --user
+    - name: Build a binary wheel and a source tarball
+      run: >-
+        python -m
+        build
+        --sdist
+        --wheel
+        --outdir dist/
+        .
+    - name: Publish distribution 📦 to Test PyPI
+      continue-on-error: ${{ github.event.action == 'released' }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+    - name: Publish distribution 📦 to PyPI
+      if: ${{ github.event.action == 'released' }}
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.ACROME_SMD_PYTHON_PYPI }}
+
+'''
+'''--- CheckSMD/ModuleSet_Check.py ---
+from smd.red import*
+from colorama import Fore, Style, init
+from tabulate import tabulate
+import os
+from osModules import*
+
+BUTTON_check	= False
+LIGHT_check		= False
+BUZZER_check	= False
+JOYSTICK_check	= False
+DISTANCE_check	= False
+QTR_check	    = False
+SERVO_check		= False
+POT_check	    = False
+RGB_check	    = False 
+IMU_check		= False
+
+operatingSystem = whichOS()
+port = 
+m = Master(port)
+m.attach(Red(0))
+ID = 0      #connect to all IDs
+
+modulesList = m.scan_modules(0)
+print(modulesList)
+
+modulesID = 1
+
+try:
+    if "Button_1" in modulesList:
+        BUTTON_check = True
+    
+    if "Light_1" in modulesList:
+        LIGHT_check = True
+
+    if "Buzzer_1" in modulesList:
+        BUZZER_check = True
+
+    if "Joystick_1" in modulesList:
+        JOYSTICK_check = True   
+
+    if "Distance_1" in modulesList:
+        DISTANCE_check = True
+
+    if "QTR_1" in modulesList:
+        QTR_check = True
+
+    if "Servo_1" in modulesList:
+        SERVO_check = True
+
+    if "Pot_1" in modulesList:
+        POT_check = True
+
+    if "RGB_1" in modulesList:
+        RGB_check = True
+
+    if "IMU_1" in modulesList:
+        IMU_check = True
+except:
+    pass
+
+def colorize_boolean(value):
+    return f"{Fore.GREEN}True{Style.RESET_ALL}" if value else f"{Fore.RED}False{Style.RESET_ALL}"
+
+print("\n\n CHECK TABLE \n\n")
+
+print(f"Button:\t\t{colorize_boolean(BUTTON_check)}")
+print(f"Light:\t\t{colorize_boolean(LIGHT_check)}")
+print(f"Buzzer:\t\t{colorize_boolean(BUZZER_check)}")
+print(f"Joystick:\t{colorize_boolean(JOYSTICK_check)}")
+print(f"Distance:\t{colorize_boolean(DISTANCE_check)}")
+print(f"QTR:\t\t{colorize_boolean(QTR_check)}")
+print(f"Servo:\t\t{colorize_boolean(SERVO_check)}")
+print(f"Potantiometer:\t{colorize_boolean(POT_check)}")
+print(f"RGB:\t\t{colorize_boolean(RGB_check)}")
+print(f"IMU:\t\t{colorize_boolean(IMU_check)}")
+
+input("press Enter")
+
+os.system('cls')
+
+RGBcounter = 0
+
+button_cnt = 0
+
+while True:
+
+    try:
+        button = m.get_button(0, modulesID)
+    except:
+        button = False
+    try:
+        light = m.get_light(0, modulesID)
+    except:
+        light = False
+    try:
+        distance = m.get_distance(0, modulesID)
+    except:
+        distance = False
+    try:
+        joystick = m.get_joystick(0, modulesID)
+    except:
+        joystick = False
+    try:
+        qtr = m.get_qtr(0, modulesID)
+    except:
+        qtr = False
+    try:
+        pot = m.get_potantiometer(0, modulesID)
+    except:
+        pot = False
+    try:
+        imu = m.get_imu(0, modulesID)
+    except:
+        imu = False
+
+    if button == 1:
+        button_cnt += 1
+
+    if button_cnt == 5:
+        button_cnt = 0
+
+    try:
+        qtrToServo = qtr[0]*30 + qtr[1]*60 + qtr[2]*90
+    except:
+        pass
+
+    try:
+        if button == 1:
+            m.set_buzzer(0, modulesID, distance*10) # set buzzer by distance
+        else:
+            m.set_buzzer(0, modulesID, 0) # set buzzer by distance
+            buzzer = True
+    except:
+        buzzer = False
+
+    
+
+    try:
+        if button == 1:
+            m.set_rgb(0, modulesID, 255, 0, 0)  #set rgb by button
+        if button == 2:
+            m.set_rgb(0, modulesID, 0, 255, 0)  #set rgb by button
+        if button == 3:
+            m.set_rgb(0, modulesID, 0, 0, 255)
+        if button == 4:
+            m.set_rgb(0, modulesID, 255, 255, 255)
+        else:
+            m.set_rgb(0, modulesID, 0, 0, 0)
+        rgb = True
+    except:
+        rgb = False
+
+    
+    try:  
+        m.set_servo(0, modulesID, qtrToServo) # set servo by gtr
+        servo = True
+    except:
+        servo = False
+
+    data = [
+    ["Button", button],
+    ["Light", light],
+    ["Buzzer", buzzer],
+    ["Joystick", joystick],
+    ["Distance", distance],
+    ["QTR", qtr],
+    ["Servo", servo],
+    ["Potantiometer", pot],
+    ["RGB", rgb],
+    ["IMU", imu]
+    ]
+
+    table = tabulate(data, headers=["Component", "Value"], tablefmt="fancy_grid")
+    if operatingSystem == 'Windows':
+        os.system('cls')    
+    else:
+        os.system('clear')
+    print(table)
+'''
+'''--- CheckSMD/SMD_Check.py ---
+from smd.red import*
+import osModules
+from colorama import Fore, Style, init
+
+def colorize_boolean(value):
+    return f"{Fore.GREEN}True{Style.RESET_ALL}" if value else f"{Fore.RED}False{Style.RESET_ALL}"
+
+#BASICS
+COMMUNICATE = False
+EEPROM  =   False
+REBOOT = False
+FACTORY_RESET = False
+
+SET_VALS = False
+GET_VALS = False
+
+#MOTOR CONTROL
+MOTOR_ROTATION = False
+ENCODER_READ = False
+
+TUNE_PID = False
+
+PWM_CONTROL = False
+POSITION_CONTROL = False
+VELOCITY_CONTROL = False
+TORQUE_CONTROL = False
+
+#STARTING
+cpr = float(input("CPR = "))
+rpm = float(input("RPM = "))
+
+id = 0
+cpr = 4741.0
+rpm = 100.0
+
+port = osModules.USB_serial_port()
+m = Master(port, 115200)
+
+m.attach(Red(0))
+
+try: #COMMUNICATION
+    if m.get_driver_info(0) == None:
+        COMMUNICATE = False
+    else:
+        COMMUNICATE = True
+    print(m.get_driver_info(0))
+except:
+    print("COMMUNICATION exception!")
+
+try: #EEPROM, REBOOT
+    m.update_driver_id(id, 66)
+    id = 66
+    m.attach(Red(id))    
+    time.sleep(0.5)
+    if m.get_driver_info(id) == None:
+        COMMUNICATE = False
+        REBOOT = False
+        EEPROM = False
+    else:
+        COMMUNICATE = True
+        REBOOT = True
+        EEPROM = True
+    print(m.get_driver_info(id))
+except:
+    print("EEPROM, REBOOT exception!")
+
+try: # FACTORY RESET
+    m.factory_reset(id)
+    time.sleep(0.5)
+    id = 0
+    if m.get_driver_info(id) == None:
+        COMMUNICATE = False
+        REBOOT = False
+        EEPROM = False
+        COMMUNICATE = False
+        FACTORY_RESET = False
+    else:
+        COMMUNICATE = True
+        REBOOT = True
+        EEPROM = True
+        COMMUNICATE = True
+        FACTORY_RESET = True
+    print(m.get_driver_info(id))
+except:
+    print("FACTORY RESET exception!")
+
+print(f"Communication:\t{colorize_boolean(COMMUNICATE)}")
+print(f"EEPROM:\t\t{colorize_boolean(EEPROM)}")
+print(f"Reboot:\t\t{colorize_boolean(REBOOT)}")
+print(f"Factory Reset:\t{colorize_boolean(FACTORY_RESET)}")
+print("\n") 
+
+try: # MOTOR ROTATION, ENCODER READ
+    m.update_driver_id(id, 101)
+    id = 101
+    m.attach(Red(id))
+    time.sleep(1)
+    m.set_shaft_cpr(id, cpr)
+    m.set_shaft_rpm(id, rpm)
+    m.set_operation_mode(id, OperationMode.PWM)
+    pos = m.get_position(id)[0]
+    m.set_duty_cycle(id, 90)
+    m.enable_torque(id, True)
+    time.sleep(1)
+
+    if m.get_position(id)[0]- pos> (rpm/120)*cpr:
+        m.enable_torque(id, False)
+        time.sleep(0.2)
+        m.set_duty_cycle(id, -90)
+        pos = m.get_position(id)[0]
+        m.enable_torque(id, True)
+        time.sleep(1)
+        m.enable_torque(id, False)
+
+        if m.get_position(id)[0] - pos < (rpm/120)*cpr:
+            MOTOR_ROTATION = True
+            ENCODER_READ = True
+    else:
+        pass
+except:
+    print("MOTOR ROTATION, ENCODER exception!")
+
+try:
+    m.attach(Red(id))    
+    time.sleep(0.5)
+    
+    m.pid_tuner(id)
+    time.sleep(30)
+    print("Velocity Control Parameters by PID")
+    print(m.get_control_parameters_velocity(id))
+    print("Position Control Parameters by PID")
+    print(m.get_control_parameters_position(id))
+    print(type(m.get_control_parameters_velocity(id)))
+    if m.get_shaft_cpr(id)[0]==(cpr):
+        if m.get_shaft_rpm(id)[0]==(rpm):
+            GET_VALS = True
+            SET_VALS = True
+    if m.get_control_parameters_position(id)[0] == 1.0:
+        TUNE_PID = False
+    else:
+        TUNE_PID = True
+except:
+    print("COMMUNICATION exception!")
+    
+
+try:
+    m.set_operation_mode(id,OperationMode.PWM)
+    m.enable_torque(id, 1)
+    m.set_duty_cycle(id, 60)
+    time.sleep(2)
+    pos1 = m.get_position(id)[0]
+    time.sleep(2)
+    pos2 = m.get_position(id)[0]
+    if abs(pos2 - pos1) < 10:
+        ENCODER_READ = False
+    else:
+        ENCODER_READ = True
+        PWM_CONTROL = True
+    m.enable_torque(id, 0)
+    m.set_duty_cycle(id, 0)
+except:
+    print("COMMUNICATION exception!")
+    
+
+print(f"Set Vals:\t{colorize_boolean(SET_VALS)}")
+print(f"Get Vals:\t{colorize_boolean(GET_VALS)}")
+
+print(f"Motor Rotation:\t{colorize_boolean(MOTOR_ROTATION)}")
+print(f"Encoder Read:\t{colorize_boolean(ENCODER_READ)}")
+print(f"Autotune:\t{colorize_boolean(TUNE_PID)}")
+
+print(f"PWM Control:\t{colorize_boolean(PWM_CONTROL)}")
+print(f"Position Control:\t{colorize_boolean(POSITION_CONTROL)}")
+print(f"Velocity Control:\t{colorize_boolean(VELOCITY_CONTROL)}")
+print(f"Torque Control:\t{colorize_boolean(TORQUE_CONTROL)}")
+
+#Finished
+while True:
+    m.enable_torque(id, 0)
+    time.sleep(0.2)
+    m.enable_torque(id, 1)
+    time.sleep(0.2)
+
+"""
+get_latest_fw_version
+update_driver_baudrate
+get_driver_baudrate
+update_master_baudrate
+
+set_variables
+
+factory_reset
+
+ping
+
+reset_encoder
+scan_modules
+get_driver_info
+update_driver_id
+enable_torque
+pid_tuner
+set_operation_mode
+
+set_shaft_cpr
+set_shaft_rpm
+get_shaft_rpm
+
+set_user_indicator
+
+set_position_limits
+get_position_limits
+
+set_torque_limit
+get_torque_limit
+
+set_velocity_limit
+
+set_position
+get_position
+set_velocity
+get_velocity
+set_torque
+get_torque
+
+set_duty_cycle
+get_analog_port
+
+set_control_parameters_position
+get_control_parameters_position
+"""
+'''
+'''--- CheckSMD/communication_problem.py ---
+from smd.red import*
+import osModules
+
+#id = 101
+port = osModules.USB_serial_port()
+print(port)
+m = Master(port, 115200)
+
+m.attach(Red(0))
+
+print(m.get_driver_info(0))
+
+print(m.scan_modules(0))
+
+input('enter to start.')
+
+i = 0
+while True:
+    print("button 1: " , m.get_button(0,1))
+    print("button 3: " , m.get_button(0,3))
+    print("button 5: " , m.get_button(0,5))
+    print("rgb 1: " , i)
+    m.set_rgb(0,1,(i==0)*255,(i==1)*255,(i==2)*255)
+    print("rgb 2: " , i)
+    m.set_rgb(0,2,(i==0)*255,(i==1)*255,(i==2)*255)
+    print("rgb 5: ", i)
+    m.set_rgb(0,5,(i==0)*255,(i==1)*255,(i==2)*255)
+
+    i+=1
+    if i==3:
+        i=0
+
+        
+'''
+'''--- CheckSMD/osModules.py ---
+import serial.tools.list_ports
+import platform
+
+def whichOS():
+    return platform.system()
+
+def USB_serial_port():
+
+    if whichOS() == "Windows":
+        ports = list(serial.tools.list_ports.comports())
+        if ports:
+            for port, desc, hwid in sorted(ports):
+                #print(f"{port}: {desc} [{hwid}]")
+                #print(type(port))
+                if 'USB Serial Port' in desc:
+                    return port
+        else:
+            return None
+        
+    if whichOS() == "Linux":
+        ports = list(serial.tools.list_ports.comports())
+        if ports:
+            for port, desc, hwid in sorted(ports):
+                #print(f"{port}: {desc} [{hwid}]")
+                #print(type(port))
+                if '/dev/ttyUSB' in port:
+                    return port
+        else:
+            return None
+
+'''
+'''--- CheckSMD/try.py ---
+from smd.red import*
+import osModules
+
+id = 0
+port = osModules.USB_serial_port()
+print(port)
+m = Master(port, 115200)
+
+m.attach(Red(0))
+
+print(m.get_driver_info(0))
+
+print(m.scan_modules(0))
+
+#print(m.get_variables(0, [Index.connected_bitfield]))
+
+'''
+m.set_operation_mode(0, OperationMode.Position)
+m.enable_torque(0, True)
+'''
+
+'''
+m.goTo(0, 40000)
+
+'''
+'''
+'''--- README.md ---
+
+# Python Library
+
+# Overview
+This library provides easy-to-use Python modules and methods for interfacing with Acrome Smart Motor Driver products.
+
+Embrace the world of motor control with simplicity using our SMD Python Library. Designed specifically for controlling SMDs, this library provides a seamless experience no matter your skill level in how you control motors.
+
+Whether your project requires basic speed adjustments or precise position control, quickly and easily leverage the flexibility of Python to effortlessly implement a wide variety of motor control strategies.
+
+SMD Python Library takes your projects to the next level by offering seamless integration with SMD Sensor modules. With this library, you can increase the functionality and efficiency of your project by effortlessly collecting data from SMD sensor modules via SMD.
+
+Develop your projects with "Acrome Smart Motor Drivers" and a computer that can run your Python code.
+
+You can reach the Acrome Smart Motors Drivers documentation [here](https://acrome-smd.readthedocs.io/en/latest/getting-started.html).
+
+# Installation
+To use [Acrome Smart Motor Drivers](https://acrome.net/product/smart-motor-drivers) with python library, follow the installation steps below. Library is compatible with Python 3.x and can be installed on both Windows and Linux systems.
+
+### Prerequisites
+
+Before you begin, make sure you have the following prerequisites:
+
+- Python 3.x: [Python Official Website](https://www.python.org/downloads/)
+
+### Installation                
+
+#### Windows
+
+1. Open a Command Prompt with administrative privileges.
+
+2. Install SMD library using `pip` (Python package manager) by running the following command:
+
+  ```shell
+  pip install acrome-smd
+  ```
+
+3. Wait for the installation to complete. Pip will automatically download and install the library along with any required dependencies.
+
+#### Linux
+1. Open a terminal.
+
+2. Install SMD library using pip (Python package manager) by running the following command:
+
+  ```shell
+  pip install acrome-smd
+  ```
+
+3. Wait for the installation to complete. Pip will automatically download and install SMD Library along with any required dependencies.
+
+### Verification
+To verify that SMD library has been successfully installed, open a Python interpreter and run the following command:
+
+```python
+import smd
+import smd.red
+```
+If no errors are raised, the installation was successful.
+
+### Upgrading
+To upgrade SMD Library to the latest version, you can use the following pip command:
+
+  ```shell
+  pip install acrome-smd
+  ```
+
+# Usage
+Import the SMD Library:
+First, import the SMD library at the beginning of your Python script:
+
+```python
+from smd.red import *
+```
+### Initialize SMD:
+
+Create an instance of the Master class by initializing it with the appropriate settings. This instance represents your SMD and allows you to control it.
+
+````python
+ID = 0  # Set the ID of your SMART MOTOR DRIVER
+SerialPort = '/dev/ttyUSB0'  # Replace with your specific serial port ( for ex 'COM3'.)
+baudrate = 115200  # Set the baud rate for serial communication
+
+myMaster = Master(SerialPort , baudrate) #create a master object
+print(master.scan()) #prints ID list of connected SMDs
+
+from smd.red import *
+import time
+
+MASTER_PORT =  "/dev/ttyUSB0" #depending on operating system, port, etc. may vary depending on the
+master = Master(MASTER_PORT) #creating master object
+
+print(master.scan()) #prints ID list of connected SMDs
+
+ID = master.attached()[0] #getting ID of first SMD from scanned ones.
+#ID = 0 You can use directly this if it has never been changed before.
+````
+
+Configure SMD:
+
+````python
+#rpm and cpr values are depend on the motor you use.
+master.set_shaft_rpm(ID, 10000) 
+master.set_shaft_cpr(ID, 64)
+
+#starts autotune for setting PID values of control algorithms
+master.pid_tuner(ID)            
+````
+You can configure and use the **SMD**  using specific methods belonging to the master class, just like in the code above.
+
+You can access all sample codes from [here](https://github.com/Acrome-Smart-Motor-Driver/Example-Projects).
+Please read full documentation to use all features of a **SMD** 
+
+# Firmware Update
+
+The following methods provide users with ability to update firmware of their SMDs. To use these methods users must have an internet connection. __Users should not disconnect power from the device or it may break the device.__
+
+  - #### `get_latest_fw_version(self)`
+
+    **`Return:`** *Latest firmware version*
+
+    This method gets the latest firmware version from the Github servers.
+
+  - #### `update_fw_version(self, id: int, version='')`
+
+    **`Return:`** *True if the firmware is updated*
+
+    This method updates the firmware version with respect to given version string and ID.
+
+    `id` argument is the device ID of the connected driver.
+
+    `version` argument is the version to be updated. If version string is not given, driver is updated to the latest version available on Github.
+
+# Control
+## PID Tune and Control Parameters
+
+The control modes on the SMD operate with PID control. Therefore, correctly tuning the P, I, and D constants is crucial for accurate control. The device features an autotune capability to automatically set these values. Alternatively, users can manually input these values if desired.
+
+### Autotune
+To utilize the autotune feature on the device, it's essential to ensure that the motor is in a freely rotatable position. This is because the card continuously rotates the motor during the autotuning process.
+
+Following this, the next step is to input the motor's CPR (Counts Per Revolution) and RPM (Revolutions Per Minute) values into the card using the provided methods below. Failing to do this accurately may result in incorrect calculations.
+
+  - #### `set_shaft_cpr(self, id: int, cpr: float)`
+
+    **`Return:`** *None*
+
+    This method sets the count per revolution (CPR) of the motor output shaft.
+
+    `id` argument is the device ID of the connected driver.
+
+    `cpr` argument is the CPR value of the output shaft
+
+  - #### `set_shaft_rpm(self, id: int, rpm: float)`
+
+    **`Return:`** *None*
+
+    This method sets the revolution per minute (RPM) value of the output shaft at 12V rating.
+
+    `id` argument is the device ID of the connected driver.
+
+    `rpm` argument is the RPM value of the output shaft at 12V
+
+After completing these steps, you should initiate the tuning process using the ``pid_tuner()`` method. Please note that immediately after calling this method, the motors will start rotating with varying speeds.
+
+  - #### `pid_tuner(self, id: int)`
+
+    **`Return:`** *None*
+
+    This method starts a PID tuning process. Shaft CPR and RPM values **must** be configured beforehand. If CPR and RPM values are not configured, motors will not spin.
+
+    `id` argument is the device ID of the connected driver.
+
+Once the ``pid_tuner()`` method is initiated, the state of the torque (whether it's enabled or not) does not affect motor operation. There is no need to use the ``enable_torque()`` function.
+
+#### An Example of Autotune 
+```python
+from smd.red import *
+import time
+
+MASTER_PORT =  "/dev/ttyUSB0" #depending on operating system, port, etc. may vary depending on the
+master = Master(MASTER_PORT) #creating master object
+
+print(master.scan()) #prints ID list of connected SMDs
+
+ID = master.attached()[0] #getting ID of first SMD from scanned ones. You can use directly ID = 0 if it has never been changed before.
+
+master.set_shaft_rpm(ID,10000)  #rpm and cpr values are depend on the motor you use.
+master.set_shaft_cpr(ID,64)
+master.pid_tuner(ID)            #starts autotune for setting PID values of control algorithms
+```
+
+### Setting PID Values
+Manual input of the necessary constants for PID control is also possible. For this, separate P, I, and D constants should be configured for each control mode. Please note that each mode utilizes its own set of constants to control the motor. There are dedicated methods for configuring these constants for each control mode.
+
+- ####  `set_control_parameters_position(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None)`
+
+    **`Return:`** *None*
+
+      This method sets the control block parameters for position control mode.
+      Only assigned parameters are written, `None`'s are ignored. The default
+      max output limit is 950.
+
+      `id` argument is the device ID of the driver.
+
+      `p` argument is the the proportional gain. Defaults to None.
+
+      `i` argument is the integral gain. Defaults to None.
+
+      `d` argument is the derivative gain. Defaults to None.
+
+      `db` argument is the deadband (of the setpoint type) value. Defaults to None.
+
+      `ff` argument is the feedforward value. Defaults to None.
+
+      `ol` argument is the maximum output limit. Defaults to None.
+
+- ####  `set_control_parameters_velocity(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None)`
+
+    **`Return:`** *None*
+
+      This method sets the control block parameters for velocity control mode.
+        Only assigned parameters are written, `None`'s are ignored. The default
+        max output limit is 950.
+
+      `id` argument is the device ID of the driver.
+
+      `p` argument is the the proportional gain. Defaults to None.
+
+      `i` argument is the integral gain. Defaults to None.
+
+      `d` argument is the derivative gain. Defaults to None.
+
+      `db` argument is the deadband (of the setpoint type) value. Defaults to None.
+
+      `ff` argument is the feedforward value. Defaults to None.
+
+      `ol` argument is the maximum output limit. Defaults to None.
+- ####  `set_control_parameters_torque(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None)`
+
+    **`Return:`** *None*
+
+      This method sets the control block parameters for torque control mode.
+        Only assigned parameters are written, `None`'s are ignored. The default
+        max output limit is 950.
+
+      `id` argument is the device ID of the driver.
+
+      `p` argument is the the proportional gain. Defaults to None.
+
+      `i` argument is the integral gain. Defaults to None.
+
+      `d` argument is the derivative gain. Defaults to None.
+
+      `db` argument is the deadband (of the setpoint type) value. Defaults to None.
+
+      `ff` argument is the feedforward value. Defaults to None.
+
+      `ol` argument is the maximum output limit. Defaults to None.
+
+### Getting PID Values and Control values
+The P, I, and D constants and other values entered for control modes can be obtained. This can be achieved by using the methods provided below.
+
+- ####  `get_control_parameters_position(self, id: int)`
+
+    **`Return:`** *Returns the list [P, I, D, Feedforward, Deadband, OutputLimit]*
+
+    This method gets the position control block parameters.
+
+    `id` argument is the device ID of the driver.
+
+- ####  `get_control_parameters_velocity(self, id: int)`
+
+    **`Return:`** *Returns the list [P, I, D, Feedforward, Deadband, OutputLimit]*
+
+    This method gets the velocity control block parameters.
+
+    `id` argument is the device ID of the driver.
+  
+- ####  `get_control_parameters_torque(self, id: int)`
+
+    **`Return:`** *Returns the list [P, I, D, Feedforward, Deadband, OutputLimit]*
+
+    This method gets the torque control block parameters.
+
+    `id` argument is the device ID of the driver.
+
+#### you can see the PID values after then autotune with code below. 
+```python
+from smd.red import *
+import time
+
+MASTER_PORT =  "/dev/ttyUSB0"
+master = Master(MASTER_PORT) #creating master object
+print(master.scan())
+ID = 0 #ID of the SMD connected and autotuned.
+
+print(master.get_control_parameters_position(ID))
+print(master.get_control_parameters_velocity(ID))
+
+```
+
+## Brushed DC Motor Controls
+The SMD Red has 4 control modes:
+
+- **PWM Control:** This mode provides power to a brushed DC motor using PWM signals.
+
+- **Position Control:** In this mode, the brushed motor moves to the desired positions using information from the encoder.
+
+- **Velocity Control:** This mode ensures that the motor rotates at the desired speed using data from the encoder.
+
+- **Torque Control:** This mode allows the motor to apply a specific torque by drawing the desired current.
+
+Except for the *PWM Control mode*, all of these control modes operate with PID control. Therefore, it is essential to configure the PID values before starting the motors in these control modes. Without proper PID tuning, the motors may not work at all or may not perform as desired. You can find the necessary information for setting PID values in the [PID Tune](#pid-tune) section of the documentation.
+
+#### Control Methods
+
+Regardless of which control mode you choose to use, there are two essential methods that you need to be aware of. One is the `set_operation_mode()` method, which allows you to select the motor control mode you want to use. The other is `enable_torque()`, which enables or disables the motor rotation.
+
+- #### `set_operation_mode(self, id: int, mode: OperationMode)`
+
+    **`Return:`** *None*
+
+    This method sets the operation mode of the driver. Operation mode may be one of the following:
+    - `OperationMode.PWM`, 
+    - `OperationMode.Position`,
+    - `OperationMode.Velocity`,
+    - `OperationMode.Torque`.
+
+    `id` argument is the device ID of the connected driver.
+
+- #### `enable_torque(self, id: int, en: bool)`
+
+    **`Return:`** *None*
+
+    This method enables or disables power to the motor which is connected to the driver.
+
+    `id` argument is the device ID of the connected driver.
+
+    `en` argument is a boolean. `True` enables the torque while False `disables`.
+
+### PWM Control
+- ####  `set_duty_cycle(self, id: int, pct: float):`
+
+    **`Return:`** *None*
+
+    This method sets the duty cycle to the motor for PWM control mode in terms of percentage. Negative values will change the motor direction.
+
+    `id` argument is the device ID of the driver.
+
+    `id` argument is the duty cycle percentage.
+#### An Example of PWM Control
+```python
+from smd.red import *
+
+MASTER_PORT =  "COM10"
+master = Master(MASTER_PORT) #creating master object
+print(master.scan())
+ID = 0 
+
+master.set_operation_mode(ID, 0)    #sets the operating mode to 0 represents PWM control mode.
+master.set_duty_cycle(ID, 50)       #sets the duty cycle to 50 percent
+master.enable_torque(ID, True)      #enables the motor torque to start rotating
+```
+### Position Control
+  - #### `set_position_limits(self, id: int, plmin: int, plmax: int)`
+
+    **`Return:`** *None*
+
+    This method sets the position limits of the motor in terms of encoder ticks. Default for min is -2,147,483,648 and for max is 2,147,483,647. The torque is disabled if the value is exceeded so a tolerence factor should be taken into consideration when setting these values.
+
+    `id` argument is the device ID of the connected driver.
+
+    `plmin` argument is the minimum position limit.
+
+    `plmax` argument is the maximum position limit.
+
+  - #### `get_position_limits(self, id: int)`
+
+    **`Return:`** *Min and max position limits*
+
+    This method gets the position limits of the motor in terms of encoder ticks.
+
+    `id` argument is the device ID of the connected driver.
+
+    `plmin` argument is the minimum position limit.
+
+    `plmax` argument is the maximum position limit.
+
+  - ####  `set_position(self, id: int, sp: int)`
+
+    **`Return:`** *None*
+
+      This method sets the desired setpoint for the position control in terms of encoder ticks.
+
+      `id` argument is the device ID of the driver.
+
+      `sp` argument is the position control setpoint.
+
+  - ####  `get_position(self, id: int)`
+
+    **`Return:`** *Current position of the motor shaft*
+
+      This method gets the current position of the motor from the driver in terms of encoder ticks.
+
+      `id` argument is the device ID of the driver.
+
+#### An Example of Position Control
+
+```python
+from smd.red import *
+
+MASTER_PORT =  "COM10"
+master = Master(MASTER_PORT) #creating master object
+print(master.scan())
+ID = 0 
+
+master.set_shaft_rpm(ID, 10000)  #rpm and cpr values are depend on the motor you use.
+master.set_shaft_cpr(ID, 64)
+master.set_control_parameters_position(ID, 10, 0, 8) #SMD ID, Kp, Ki, Kd
+
+master.set_operation_mode(ID, 1)    #sets the operating mode to 1 represents Position control mode.
+master.enable_torque(ID, True)      #enables the motor torque to start rotating
+
+while True:
+    master.set_position(ID, 5000)   #sets the setpoint to 5000 encoder ticks.
+    time.sleep(1.2)
+    master.set_position(ID, 0)      #sets the setpoint to 0 encoder ticks. Motor goes to start
+    time.sleep(1.2)
+
+```
+You should enter the PID values of Position Control Mode or just tune once the SMD at start. CPR and RPM values should be entered to SMD calculates the neseccary varaibles. If you don't then the motor cannot rotate.
+
+### Velocity Control
+- #### `set_velocity_limit(self, id: int, vl: int)`
+
+    **`Return:`** *None*
+
+    This method sets the velocity limit for the motor output shaft in terms of RPM. The velocity limit applies only in velocity mode. Default velocity limit is 65535.
+
+    `id` argument is the device ID of the connected driver.
+
+    `vl` argument is the new velocity limit (RPM).
+
+- #### `get_velocity_limit(self, id: int)`
+
+    **`Return:`** *Velocity limit*
+
+    This method gets the velocity limit from the driver in terms of RPM.
+
+    `id` argument is the device ID of the connected driver.
+- ####  `set_velocity(self, id: int, sp: int)`
+
+    **`Return:`** *None*
+
+      This method sets the desired setpoint for the velocity control in terms of RPM.
+
+      `id` argument is the device ID of the driver.
+
+- ####  `get_velocity(self, id: int)`
+
+    **`Return:`** *Current velocity of the motor shaft*
+
+      This method gets the current velocity of the motor output shaft from the driver in terms of RPM.
+
+      `id` argument is the device ID of the driver.
+
+#### An Example of Velocity Control
+```python
+from smd.red import *
+
+MASTER_PORT =  "COM10"
+master = Master(MASTER_PORT) #creating master object
+print(master.scan())
+ID = 0 
+
+master.set_shaft_rpm(ID,10000)  #rpm and cpr values are depend on the motor you use.
+master.set_shaft_cpr(ID,64)
+master.set_control_parameters_velocity(ID,10,1,0) #SMD ID, Kp, Ki, Kd
+
+master.set_operation_mode(ID, 2)    #sets the operating mode to 2 represents Velocity control mode.
+master.set_velocity(ID, 2000)       #sets the setpoint to 2000 RPM.   
+
+master.enable_torque(ID, True)      #enables the motor torque to start rotating
+```
+You should enter the PID values of Position Control Mode or just tune once the SMD at start. CPR and RPM values should be entered to SMD calculates the neseccary varaibles. If you don't then the motor cannot rotate.
+### Torque Control
+  - #### `set_torque_limit(self, id: int, tl: int)`
+
+    **`Return:`** *None*
+
+    This method sets the torque limit of the driver in terms of milliamps (mA).
+
+    `id` argument is the device ID of the connected driver.
+
+    `tl` argument is the new torque limit (mA).
+
+  - #### `get_torque_limit(self, id: int)`
+
+    **`Return:`** *Torque limit (mA)*
+
+    This method gets the torque limit from the driver in terms of milliamps (mA).
+
+    `id` argument is the device ID of the connected driver.
+
+   - ####  `set_torque(self, id: int, sp: int)`
+
+        **`Return:`** *None*
+
+        This method sets the desired setpoint for the torque control in terms of milliamps (mA).
+
+        `id` argument is the device ID of the driver.
+
+   - ####  `get_torque(self, id: int)`
+
+        **`Return:`** *Current drawn from the motor (mA)*
+
+        This method gets the current drawn from the motor from the driver in terms of milliamps (mA).
+
+        `id` argument is the device ID of the driver.
+
+#### An Example of Torque Control
+```python
+from smd.red import *
+
+MASTER_PORT =  "COM10"
+master = Master(MASTER_PORT) #creating master object
+print(master.scan())
+ID = 0 
+
+master.set_shaft_rpm(ID,10000)  #rpm and cpr values are depend on the motor you use.
+master.set_shaft_cpr(ID,64)
+master.set_control_parameters_torque(ID, 10, 0.1, 0) #SMD ID, Kp, Ki, Kd
+#master.set_torque_limit(220)
+
+master.set_operation_mode(ID, 3)    #sets the operating mode to 3 represents Torque control mode.
+master.set_torque(ID, 80)          #sets the setpoint to 80 mili amps(mA).
+master.enable_torque(ID, True)      #enables the motor torque to start rotating
+```
+**_You must enter the PID values of the Torque Control Mode. Since Auto tune does not produce these values, you must set them yourself._** If you do not do this, the motor cannot rotate properly.
+
+# Base methods
+- ### Red Class
+  Methods of the `Red` class are used for the underlying logic of the Master class. As such, it is not recommended for users to call `Red` class methods explicitly. Users may create instances of the class in order to attach to the master. Thus, only `__init__` constructor is given here.
+
+  - #### `__init__(self, ID: int)`:
+
+    This is the initalizer for Red class which represents an object of SMD (Smart Motor Drivers) driver.
+
+    `ID` argument is the device ID of the created driver.
+
+- ### Master Class
+
+  - #### `__init__(self, portname, baudrate=115200)`
+
+    **`Return:`** *None*
+
+    This is the initializer for Master class which controls the serial bus.
+
+    `portname` argument is the serial/COM port of the host computer which is connected to the Acrome Smart Motor Drivers via Mastercard.
+
+    `baudrate` argument specifies the baudrate of the serial port. User may change this value to something between 3.053 KBits/s and 12.5 MBits/s. However, it is up to the user to select a value which is supported by the user's host computer.
+
+  - #### `update_driver_baudrate(self, id: int, br: int):`
+
+    **`Return:`** *None*
+
+    This method updates the baudrate of the driver, saves it to EEPROM and resets the driver board. Once the board is up again, the new baudrate is applied.
+
+    `id` argument is the device ID of the connected driver.
+
+    `br` argument is the user entered baudrate value. This value must be between 3.053 KBits/s and 12.5 MBits/s.
+
+  - #### `get_driver_baudrate(self, id: int):`
+
+    **`Return:`** *The baudrate of the driver with given ID*
+
+    This method reads the baudrate of the driver in bps.
+
+    `id` argument is the device ID of the connected driver.
+
+  - #### `update_master_baudrate(self, br: int):`
+
+    **`Return:`** *None*
+
+    This method updates the baudrate of the host computer's serial port and should be called after changing the baudrate of the driver board to sustain connection.
+
+    `br` argument is the user entered baudrate value. This value must be between 3.053 KBits/s and 12.5 MBits/s.
+
+  - #### `attach(self, driver: Red):`
+
+    **`Return:`** *None*
+
+    This method attaches an instance of Red class to the master. If a device ID is not attached to the master beforehand, methods of the master class will not work on the given device ID.
+
+    `driver` argument is an instance of the Red class. Argument must be an instance with a valid device ID.
+
+  - #### `detach(self, id: int):`
+
+    **`Return:`** *None*
+
+    This method removes the driver with the given devic ID from thee master. Any future action to the removed device ID will fail unless it is re-attached.
+
+  - #### `set_variables(self, id: int, idx_val_pairs=[], ack=False)`
+
+    **`Return:`** *List of the acknowledged variables or None*
+
+    This method updates the variables of the driver board with respect to given index/value pairs.
+
+    `id` argument is the device ID of the connected driver.
+
+    `idx_val_pairs` argument is a list, consisting of lists of parameter indexes and their value correspondents.
+
+  - #### `get_variables(self, id: int, index_list: list)`
+
+    **`Return:`** *List of the read variables or None*
+
+    This method reads the variables of the driver board with respect to given index list.
+
+    `id` argument is the device ID of the connected driver.
+
+    `index_list` argument is a list with every element is a parameter index intended to read.
+
+  - #### `set_variables_sync(self, index: Index, id_val_pairs=[])`
+
+    **`Return:`** *List of the read variables or None*
+
+    This method updates a specific variable of the  multiple driver boards at once.
+
+    `index` argument is the parameter to be updated.
+
+    `id_val_pairs` argument is a list, consisting of lists of device IDs and the desired parameter value correspondents.
+
+  - #### `scan(self)`
+
+    **`Return:`** *List of the connected driver device IDs.*
+
+    This method scans the serial port, detects and returns the connected drivers.
+
+  - #### `reboot(self, id: int)`
+
+    **`Return:`** *None*
+
+    This method reboots the driver with given ID. Any runtime parameter or configuration which is not saved to EEPROM is lost after a reboot. EEPROM retains itself.
+
+    `id` argument is the device ID of the connected driver.
+
+  - #### `factory_reset(self, id: int)`
+
+    **`Return:`** *None*
+
+    This method clears the EEPROM config of the driver and restores it to factory defaults.
+    
+    `id` argument is the device ID of the connected driver.
+
+  - #### `eeprom_write(self, id: int, ack=False)`
+
+    **`Return:`** *None*
+
+    This method clears the EEPROM config of the driver and restores it to factory defaults.
+    
+    `id` argument is the device ID of the connected driver.
+
+  - #### `ping(self, id: int)`
+
+    **`Return:`** *True or False*
+
+    This method sends a ping package to the driver and returns `True` if it receives an acknowledge otherwise `False`.
+    
+    `id` argument is the device ID of the connected driver.
+
+  - #### `reset_encoder(self, id: int)`
+
+    **`Return:`** *None*
+    
+    This method resets the encoder counter to zero.
+
+    `id` argument is the device ID of the connected driver.
+  - #### `enter_bootloader(self, id: int)`
+
+    **`Return:`** *None*
+    
+    This method puts the driver into bootloader. After a call to this function, firmware of the driver can be updated with a valid binary or hex file. To exit the bootloader, unplug - plug the driver from power or press the reset button.
+
+    `id` argument is the device ID of the connected driver.
+
+  - #### `get_driver_info(self, id: int)`
+
+    **`Return:`** *Dictionary containing version info*
+    
+    This method reads the hardware and software versions of the driver and returns as a dictionary.
+
+    `id` argument is the device ID of the connected driver.
+    
+  - #### `update_driver_id(self, id: int, id_new: int)`
+
+    **`Return:`** *None*
+    
+    This method updates the device ID of the driver temporarily. `eeprom_write(self, id:int)` method must be called to register the new device ID.
+
+    `id` argument is the device ID of the connected driver.
+
+    `id_new` argument is the new intended device ID of the connected driver.
+    
+  - #### `set_user_indicator(self, id: int)`
+
+    **`Return:`** *None*
+
+    This method sets the user indicator color on the RGB LED for 5 seconds. The user indicator color is cyan.
+
+    `id` argument is the device ID of the connected driver.
+
+# SMD Modules
+### SMD Modules Basic
+To use SMD modules, you should initially utilize the following scanning function. This function returns which modules are connected to the SMD. Each module has a type and an ID, and through this scanning process, you can learn these properties of the connected modules. When the board is powered up for the first time, this scan is automatically performed once, but afterward, this command should be used manually.
+  - #### `scan_modules(self, id: int):`
+
+    **`Return:`** *List of connected modules*
+    
+    This method scans and returns the module IDs which are currently connected to a driver.
+
+    `id` argument is the device ID of the connected driver.
+
+#### Button Module
+  - ####  `get_button(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns the button state*
+
+      This method gets the button module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the button. It takes values in the range of 1 - 5 (including 1 and 5).
+
+#### Light Module
+  - ####  `get_light(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns the ambient light measurement (in lux)*
+
+      This method gets the ambient light module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the ambient light. It takes values in the range of 1 - 5 (including 1 and 5).
+
+#### Buzzer Module
+  - ####  `set_buzzer(self, id: int, module_id: int, note_frequency: int)`
+
+    **`Return:`** *None*
+
+      This method enables/disables the buzzer module with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the buzzer. It takes values in the range of 1 - 5 (including 1 and 5).
+
+      `note_frequency` argument specifies the frequency of the tone in Hertz. 0 Hertz will result in no tone.
+
+#### Joystick Module
+  - ####  `get_joystick(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns the joystick module analogs and button data*
+
+      This method gets the joystick module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the joystick. It takes values in the range of 1 - 5 (including 1 and 5).
+
+  #### Example of Joystick Module Usage
+  ``` python
+  from smd.red import*
+  import time
+  m = Master("/dev/ttyUSB0")
+  m.attach(Red(0))
+  m.scan_modules(0)
+
+  # It continuously receives data from the joystick module.
+  while True:
+    joystick = m.get_joystick(0, Index.Joystick_1)
+    joystick_X = joystick[0]
+    joystick_Y = joystick[1]
+    joystick_button = joystick[2]
+  ```
+
+#### Distance Module
+  - ####  `get_distance(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns the distance from the ultrasonic distance module (in cm)*
+
+      This method gets the ultrasonic distance module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the ultrasonic distance module. It takes values in the range of 1 - 5 (including 1 and 5).
+
+#### QTR Module
+  - ####  `get_qtr(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns QTR module data: [Left(bool), Middle(bool), Right(bool)]*
+
+      This method gets the QTR module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the QTR. It takes values in the range of 1 - 5 (including 1 and 5).
+
+#### Servo Module
+  - ####  `set_servo(self, id: int, module_id: int, val: int):`
+
+    **`Return:`** *None*
+
+      This method moves servo module to a desired position.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the servo. It takes values in the range of 1 - 5 (including 1 and 5)
+
+      `val` argument is the value to write to the servo. It takes values in the range of 0 - 255 (including 0 and 255).
+
+#### Potentiometer Module
+  - ####  `get_potentiometer(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns the ADC conversion from the potentiometer module*
+
+      This method gets the potentiometer module data with given index.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the potentiometer. It takes values in the range of 1 - 5 (including 1 and 5).
+
+#### RGB Led Module
+The setRGB() method is used to control an RGB Led module by specifying the intensity or color values for each of the RGB components.
+
+  - ####  `set_rgb(self, id: int, module_id: int, red: int, green: int, blue: int):`
+
+    **`Return:`** *None*
+
+      This method sets the colour emitted from the RGB module.
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the RGB. It takes values in the range of 1 - 5 (including 1 and 5).
+
+      `red` argument is representing red color's level. It takes values in the range of 0 - 255 (including 0 and 255).
+
+      `green` argument is representing green color's level. It takes values in the range of 0 - 255 (including 0 and 255).
+
+      `blue` argument is representing blue color's level. It takes values in the range of 0 - 255 (including 0 and 255).
+
+  The method and colors can be used as in the example below for the RGB module.
+  #### Example of RGB Module Usage
+  ``` python
+  from smd.red import*
+  import time
+  m = Master("/dev/ttyUSB0")
+  m.attach(Red(0))
+  m.scan_modules(0)
+
+  m.set_rgb(0, Index.RGB_1, 255, 0, 0) # Red color
+  time.sleep(0.5)
+  m.set_rgb(0, Index.RGB_1, 0, 255, 0) # Green color
+  time.sleep(0.5)
+  m.set_rgb(0, Index.RGB_1, 0, 0, 255) # Blue color
+  time.sleep(0.5)
+  m.set_rgb(0, Index.RGB_1, 128, 0, 128) # Purple color
+  time.sleep(0.5)
+  ```
+#### IMU Module
+  - ####  `get_imu(self, id: int, module_id: int):`
+
+    **`Return:`** *Returns roll, pitch angles*
+
+      This method gets the IMU module data (roll, pitch).
+
+      `id` argument is the device ID of the driver.
+
+      `module_id` argument is the module ID of the IMU. It takes values in the range of 1 - 5 (including 1 and 5).
+
+  #### Example of IMU Module Usage
+  ``` python
+  from smd.red import*
+  import time
+  m = Master("/dev/ttyUSB0")
+  m.attach(Red(0))
+  m.scan_modules(0)
+
+  # It continuously receives data from the IMU module.
+  while True:
+    IMU = m.get_imu(0, Index.IMU_1)
+    roll  = IMU[0]
+    pitch = IMU[1]
+  ```
+
+'''
+'''--- setup.py ---
+import setuptools
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="acrome-smd",
+    version="2.0.2",
+    author="Furkan Kırlangıç",
+    author_email="furkankirlangic@acrome.net",
+    description="Python library for interfacing with Acrome Smart Motor Drivers (SMD) products.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/Acrome-Smart-Motor-Driver/python-library",
+    project_urls={
+        "Bug Tracker": "https://github.com/Acrome-Smart-Motor-Driver/python-library/issues",
+        },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+    ],
+    packages=setuptools.find_packages(exclude=['tests', 'test']),
+    install_requires=["pyserial", "stm32loader", "crccheck", "requests", "packaging"],
+    python_requires=">=3.7"
+)
+
+'''
+'''--- smd/__init__.py ---
+
+'''
+'''--- smd/_internals.py ---
+import struct
+import enum
+
+class Commands(enum.IntEnum):
+    PING = 0x00
+    WRITE = 0x01
+    WRITE_ACK = 0x80 | 0x01
+    READ = 0x02,
+    EEPROM_WRITE = 0x03
+    MODULE_SCAN = 0x04
+    REBOOT = 0x05
+    RESET_ENC = 0x06
+    TUNE = 0x07
+    HARD_RESET = 0x17
+    ERROR_CLEAR = 0x18
+    BL_JUMP = 0x30
+    SYNC_WRITE = 0x40 | 0x01
+    BULK_WRITE = 0x20 | 0x01
+    BULK_READ = 0x20 | 0x02
+    ACK = 0x80
+    __EEPROM_WRITE_ACK = -1
+
+class OperationMode():
+    PWM = 0
+    Position = 1
+    Velocity = 2
+    Torque = 3
+
+class MotorConstants():
+    MAX_ACCEL = 999999.9999
+
+Index = enum.IntEnum('Index', [
+    'Header',
+    'DeviceID',
+    'DeviceFamily',
+    'PackageSize',
+    'Command',
+    'Status',
+    'HardwareVersion',
+    'SoftwareVersion',
+    'Baudrate',
+    'OperationMode',
+    'TorqueEnable',
+    'OutputShaftCPR',
+    'OutputShaftRPM',
+    'UserIndicator',
+    'MinimumPositionLimit',
+    'MaximumPositionLimit',
+    'TorqueLimit',
+    'VelocityLimit',
+    'PositionFF',
+    'VelocityFF',
+    'TorqueFF',
+    'PositionDeadband',
+    'VelocityDeadband',
+    'TorqueDeadband',
+    'PositionOutputLimit',
+    'VelocityOutputLimit',
+    'TorqueOutputLimit',
+    'PositionScalerGain',
+    'PositionPGain',
+    'PositionIGain',
+    'PositionDGain',
+    'VelocityScalerGain',
+    'VelocityPGain',
+    'VelocityIGain',
+    'VelocityDGain',
+    'TorqueScalerGain',
+    'TorquePGain',
+    'TorqueIGain',
+    'TorqueDGain',
+    'SetPosition',
+    'PositionControlMode',
+	'SCurveSetpoint',
+	'ScurveAccel',
+	'SCurveMaxVelocity',
+	'SCurveTime',
+    'SetVelocity',
+    'SetVelocityAcceleration',
+    'SetTorque',
+    'SetDutyCycle',
+    'SetScanModuleMode',
+    'SetManualBuzzer',
+    'SetManualServo',
+    'SetManualRGB',
+    'SetManualButton',
+    'SetManualLight',
+    'SetManualJoystick',
+    'SetManualDistance',
+    'SetManualQTR',
+    'SetManualPot',
+    'SetManualIMU',
+    'Buzzer_1',
+    'Buzzer_2',
+    'Buzzer_3',
+    'Buzzer_4',
+    'Buzzer_5',
+    'Servo_1',                      
+    'Servo_2',
+    'Servo_3',
+    'Servo_4',
+    'Servo_5',
+    'RGB_1',                        
+    'RGB_2',
+    'RGB_3',
+    'RGB_4',
+    'RGB_5',
+    'PresentPosition',              
+    'PresentVelocity',
+    'MotorCurrent',
+    'AnalogPort',
+    'Button_1',                     
+    'Button_2',
+    'Button_3',
+    'Button_4',
+    'Button_5',
+    'Light_1',                      
+    'Light_2',
+    'Light_3',
+    'Light_4',
+    'Light_5',
+    'Joystick_1',
+    'Joystick_2',
+    'Joystick_3',
+    'Joystick_4',
+    'Joystick_5',                   
+    'Distance_1',                   
+    'Distance_2',
+    'Distance_3',
+    'Distance_4',
+    'Distance_5',
+    'QTR_1',                        
+    'QTR_2',
+    'QTR_3',
+    'QTR_4',
+    'QTR_5',
+    'Pot_1',                        
+    'Pot_2',
+    'Pot_3',
+    'Pot_4',
+    'Pot_5',
+    'IMU_1',                        
+    'IMU_2',
+    'IMU_3',
+    'IMU_4',
+    'IMU_5',
+    'connected_bitfield',
+    'CRCValue',
+    ], start=0)
+
+class _Data():
+    def __init__(self, index, var_type, rw=True, value=0):
+        self.__index = index
+        self.__type = var_type
+        self.__size = struct.calcsize(self.__type)
+        self.__value = value
+        self.__rw = rw
+
+    def value(self, value=None):
+        if value is None:
+            return self.__value
+        elif self.__rw:
+            if len(self.__type) > 1:
+                self.__value = list(struct.unpack('<' + self.__type, struct.pack('<' + self.__type, *value)))
+            else:
+                self.__value = struct.unpack('<' + self.__type, struct.pack('<' + self.__type, value))[0]
+
+    def index(self) -> enum.IntEnum:
+        return self.__index
+
+    def size(self) -> int:
+        return self.__size
+
+    def type(self) -> str:
+        return self.__type
+
+'''
+'''--- smd/red.py ---
+from smd._internals import (_Data, Index, Commands,
+                            OperationMode, MotorConstants)
+import struct
+from crccheck.crc import Crc32Mpeg2 as CRC32
+import serial
+import time
+from packaging.version import parse as parse_version
+import requests
+import hashlib
+import tempfile
+from stm32loader.main import main as stm32loader_main
+
+class InvalidIndexError(BaseException):
+    pass
+
+class UnsupportedHardware(BaseException):
+    pass
+
+class UnsupportedFirmware(BaseException):
+    pass
+
+class Red():
+    _HEADER = 0x55
+    _PRODUCT_TYPE = 0xBA
+    _PACKAGE_ESSENTIAL_SIZE = 6
+    _STATUS_KEY_LIST = ['EEPROM', 'Software Version', 'Hardware Version']
+
+    def __init__(self, ID: int) -> bool:
+
+        self.__ack_size = 0
+        self._config = None
+        self._fw_file = None
+        self.vars = [
+            _Data(Index.Header, 'B', False, 0x55),
+            _Data(Index.DeviceID, 'B'),
+            _Data(Index.DeviceFamily, 'B', False, self.__class__._PRODUCT_TYPE),
+            _Data(Index.PackageSize, 'B'),
+            _Data(Index.Command, 'B'),
+            _Data(Index.Status, 'B'),
+            _Data(Index.HardwareVersion, 'I'),
+            _Data(Index.SoftwareVersion, 'I'),
+            _Data(Index.Baudrate, 'I'),
+            _Data(Index.OperationMode, 'B'),
+            _Data(Index.TorqueEnable, 'B'),
+            _Data(Index.OutputShaftCPR, 'f'),
+            _Data(Index.OutputShaftRPM, 'f'),
+            _Data(Index.UserIndicator, 'B'),
+            _Data(Index.MinimumPositionLimit, 'i'),
+            _Data(Index.MaximumPositionLimit, 'i'),
+            _Data(Index.TorqueLimit, 'H'),
+            _Data(Index.VelocityLimit, 'H'),
+            _Data(Index.PositionFF, 'f'),
+            _Data(Index.VelocityFF, 'f'),
+            _Data(Index.TorqueFF, 'f'),
+            _Data(Index.PositionDeadband, 'f'),
+            _Data(Index.VelocityDeadband, 'f'),
+            _Data(Index.TorqueDeadband, 'f'),
+            _Data(Index.PositionOutputLimit, 'f'),
+            _Data(Index.VelocityOutputLimit, 'f'),
+            _Data(Index.TorqueOutputLimit, 'f'),
+            _Data(Index.PositionScalerGain, 'f'),
+            _Data(Index.PositionPGain, 'f'),
+            _Data(Index.PositionIGain, 'f'),
+            _Data(Index.PositionDGain, 'f'),
+            _Data(Index.VelocityScalerGain, 'f'),
+            _Data(Index.VelocityPGain, 'f'),
+            _Data(Index.VelocityIGain, 'f'),
+            _Data(Index.VelocityDGain, 'f'),
+            _Data(Index.TorqueScalerGain, 'f'),
+            _Data(Index.TorquePGain, 'f'),
+            _Data(Index.TorqueIGain, 'f'),
+            _Data(Index.TorqueDGain, 'f'),
+            _Data(Index.SetPosition, 'f'),
+            _Data(Index.PositionControlMode, 'B'),      # S Curve Position Control / 1 is SCurve(goTo function) 0 is direct control.
+            _Data(Index.SCurveSetpoint, 'f'),
+            _Data(Index.ScurveAccel, 'f'),
+            _Data(Index.SCurveMaxVelocity, 'f'),
+            _Data(Index.SCurveTime, 'f'),
+            _Data(Index.SetVelocity, 'f'),
+            _Data(Index.SetVelocityAcceleration, 'f'),
+            _Data(Index.SetTorque, 'f'),
+            _Data(Index.SetDutyCycle, 'f'),
+            _Data(Index.SetScanModuleMode, 'B'),        # Modules
+            _Data(Index.SetManualBuzzer, 'B'),
+            _Data(Index.SetManualServo, 'B'),
+            _Data(Index.SetManualRGB, 'B'),
+            _Data(Index.SetManualButton, 'B'),
+            _Data(Index.SetManualLight, 'B'),
+            _Data(Index.SetManualJoystick, 'B'),
+            _Data(Index.SetManualDistance, 'B'),
+            _Data(Index.SetManualQTR, 'B'),
+            _Data(Index.SetManualPot, 'B'),
+            _Data(Index.SetManualIMU, 'B'),
+            _Data(Index.Buzzer_1, 'i'),
+            _Data(Index.Buzzer_2, 'i'),
+            _Data(Index.Buzzer_3, 'i'),
+            _Data(Index.Buzzer_4, 'i'),
+            _Data(Index.Buzzer_5, 'i'),
+            _Data(Index.Servo_1, 'B'),
+            _Data(Index.Servo_2, 'B'),
+            _Data(Index.Servo_3, 'B'),
+            _Data(Index.Servo_4, 'B'),
+            _Data(Index.Servo_5, 'B'),
+            _Data(Index.RGB_1, 'i'),
+            _Data(Index.RGB_2, 'i'),
+            _Data(Index.RGB_3, 'i'),
+            _Data(Index.RGB_4, 'i'),
+            _Data(Index.RGB_5, 'i'),
+            _Data(Index.PresentPosition, 'f'),
+            _Data(Index.PresentVelocity, 'f'),
+            _Data(Index.MotorCurrent, 'f'),
+            _Data(Index.AnalogPort, 'H'),
+            _Data(Index.Button_1, 'B'),
+            _Data(Index.Button_2, 'B'),
+            _Data(Index.Button_3, 'B'),
+            _Data(Index.Button_4, 'B'),
+            _Data(Index.Button_5, 'B'),
+            _Data(Index.Light_1, 'H'),
+            _Data(Index.Light_2, 'H'),
+            _Data(Index.Light_3, 'H'),
+            _Data(Index.Light_4, 'H'),
+            _Data(Index.Light_5, 'H'),
+            _Data(Index.Joystick_1, 'iiB'),
+            _Data(Index.Joystick_2, 'iiB'), 
+            _Data(Index.Joystick_3, 'iiB'),
+            _Data(Index.Joystick_4, 'iiB'),
+            _Data(Index.Joystick_5, 'iiB'),
+            _Data(Index.Distance_1, 'H'),
+            _Data(Index.Distance_2, 'H'),
+            _Data(Index.Distance_3, 'H'),
+            _Data(Index.Distance_4, 'H'),
+            _Data(Index.Distance_5, 'H'),
+            _Data(Index.QTR_1, 'BBB'),
+            _Data(Index.QTR_2, 'BBB'),
+            _Data(Index.QTR_3, 'BBB'),
+            _Data(Index.QTR_4, 'BBB'),
+            _Data(Index.QTR_5, 'BBB'),
+            _Data(Index.Pot_1, 'B'),
+            _Data(Index.Pot_2, 'B'),
+            _Data(Index.Pot_3, 'B'),
+            _Data(Index.Pot_4, 'B'),
+            _Data(Index.Pot_5, 'B'),
+            _Data(Index.IMU_1, 'ff'),
+            _Data(Index.IMU_2, 'ff'),
+            _Data(Index.IMU_3, 'ff'),
+            _Data(Index.IMU_4, 'ff'),
+            _Data(Index.IMU_5, 'ff'),
+            _Data(Index.connected_bitfield, 'II'),
+            _Data(Index.CRCValue, 'I')
+        ]
+
+        if ID > 255 or ID < 0:
+            raise ValueError("Device ID can not be higher than 254 or lower than 0!")
+        else:
+            self.vars[Index.DeviceID].value(ID)
+
+    def get_ack_size(self):
+        return self.__ack_size
+
+    def set_variables(self, index_list=[], value_list=[], ack=False):
+        self.vars[Index.Command].value(Commands.WRITE_ACK if ack else Commands.WRITE)
+
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        for index, value in zip(index_list, value_list):
+            self.vars[int(index)].value(value)
+            fmt_str += 'B' + self.vars[int(index)].type()
+
+        self.__ack_size = struct.calcsize(fmt_str)
+
+        struct_out = list(struct.pack(fmt_str, *[*[var.value() for var in self.vars[:6]], *[val for pair in zip(index_list, [self.vars[int(index)].value() for index in index_list]) for val in pair]]))
+
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[int(Index.CRCValue)].size()
+
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+    
+
+    def get_variables(self, index_list=[]):
+        self.vars[Index.Command].value(Commands.READ)
+
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        fmt_str += 'B' * len(index_list)
+
+        self.__ack_size = struct.calcsize(fmt_str + self.vars[Index.CRCValue].type()) \
+            + struct.calcsize('<' + ''.join(self.vars[idx].type() for idx in index_list))
+
+        struct_out = list(struct.pack(fmt_str, *[*[var.value() for var in self.vars[:6]], *[int(idx) for idx in index_list]]))
+
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def reboot(self):
+        self.vars[Index.Command].value(Commands.REBOOT)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = 0
+
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def factory_reset(self):
+        self.vars[Index.Command].value(Commands.HARD_RESET)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = 0
+
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def EEPROM_write(self, ack=False):
+        self.vars[Index.Command].value(Commands.__EEPROM_WRITE_ACK if ack else Commands.EEPROM_WRITE)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = struct.calcsize(fmt_str + self.vars[Index.CRCValue].type())
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def ping(self):
+        self.vars[Index.Command].value(Commands.PING)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = struct.calcsize(fmt_str + self.vars[Index.CRCValue].type())
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def reset_encoder(self):
+        self.vars[Index.Command].value(Commands.RESET_ENC)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = struct.calcsize(fmt_str + self.vars[Index.CRCValue].type())
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def tune(self):
+        self.vars[Index.Command].value(Commands.TUNE)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = 0
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def scan_modules(self):
+        self.vars[Index.Command].value(Commands.MODULE_SCAN)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = struct.calcsize(fmt_str + self.vars[Index.CRCValue].type())
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def enter_bootloader(self):
+        self.vars[Index.Command].value(Commands.BL_JUMP)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in self.vars[:6]]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[Index.CRCValue].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        self.__ack_size = 0
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+    def update_driver_id(self, id):
+        self.vars[Index.Command].value(Commands.WRITE)
+        fmt_str = '<' + ''.join([var.type() for var in self.vars[:6]])
+        fmt_str += 'B' + self.vars[int(Index.DeviceID)].type()
+        struct_out = list(struct.pack(fmt_str, *[*[var.value() for var in self.vars[:6]], int(Index.DeviceID), id]))
+        struct_out[int(Index.PackageSize)] = len(struct_out) + self.vars[int(Index.CRCValue)].size()
+        self.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+        return bytes(struct_out) + struct.pack('<' + self.vars[Index.CRCValue].type(), self.vars[Index.CRCValue].value())
+
+class Master():
+    _BROADCAST_ID = 0xFF
+    __RELEASE_URL = "https://api.github.com/repos/Acrome-Smart-Motor-Driver/SMD-Red-Firmware/releases/{version}"
+
+    def __init__(self, portname, baudrate=115200) -> None:
+        self.__attached_drivers = []
+        self.__driver_list = [Red(255)] * 256
+        if baudrate > 12500000 or baudrate < 3053:
+            raise ValueError('Baudrate must be between 3.053 KBits/s and 12.5 MBits/s.')
+        else:
+            self.__baudrate = baudrate
+            self.__post_sleep = (10 / self.__baudrate) * 12
+            self.__ph = serial.Serial(port=portname, baudrate=self.__baudrate, timeout=0.1)
+
+    def __del__(self):
+        try:
+            self.__ph.reset_input_buffer()
+            self.__ph.reset_output_buffer()
+            self.__ph.close()
+        except Exception as e:
+            raise e
+
+    def __write_bus(self, data):
+        self.__ph.write(data)
+
+    def __read_bus(self, size) -> bytes:
+        self.__ph.reset_input_buffer()
+        return self.__ph.read(size=size)
+
+    def attached(self):
+        """ Return the scanned drivers
+
+        Returns:
+            List: Scanned drivers
+        """
+        return self.__attached_drivers
+
+    def get_latest_fw_version(self):
+        """ Get the latest firmware version from the Github servers.
+
+        Returns:
+            String: Latest firmware version
+        """
+        response = requests.get(url=self.__class__.__RELEASE_URL.format(version='latest'))
+        if (response.status_code in [200, 302]):
+            return (response.json()['tag_name'])
+
+    def update_fw_version(self, id: int, version=''):
+        """ Update firmware version with respect to given version string.
+
+        Args:
+            id (int): The device ID of the driver
+            version (str, optional): Desired firmware version. Defaults to ''.
+
+        Returns:
+            Bool: True if the firmware is updated
+        """
+
+        fw_file = tempfile.NamedTemporaryFile("wb+",delete=False)
+        if version == '':
+            version = 'latest'
+        else:
+            version = 'tags/' + version
+
+        response = requests.get(url=self.__class__.__RELEASE_URL.format(version=version))
+        if response.status_code in [200, 302]:
+            assets = response.json()['assets']
+
+            fw_dl_url = None
+            md5_dl_url = None
+            for asset in assets:
+                if '.bin' in asset['name']:
+                    fw_dl_url = asset['browser_download_url']
+                elif '.md5' in asset['name']:
+                    md5_dl_url = asset['browser_download_url']
+
+            if None in [fw_dl_url, md5_dl_url]:
+                raise Exception("Could not found requested firmware file! Check your connection to GitHub.")
+
+            #  Get binary firmware file
+            md5_fw = None
+            response = requests.get(fw_dl_url, stream=True)
+            if (response.status_code in [200, 302]):
+                fw_file.write(response.content)
+                md5_fw = hashlib.md5(response.content).hexdigest()
+            else:
+                raise Exception("Could not fetch requested binary file! Check your connection to GitHub.")
+
+            #  Get MD5 file
+            response = requests.get(md5_dl_url, stream=True)
+            if (response.status_code in [200, 302]):
+                md5_retreived = response.text.split(' ')[0]
+                if (md5_fw == md5_retreived):
+
+                    # Put the driver in to bootloader mode
+                    self.enter_bootloader(id)
+                    time.sleep(0.1)
+
+                    # Close serial port
+                    serial_settings = self.__ph.get_settings()
+                    self.__ph.close()
+
+                    # Upload binary
+                    args = ['-p', self.__ph.portstr, '-b', str(115200), '-e', '-w', '-v', fw_file.name]
+                    stm32loader_main(*args)
+
+                    # Delete uploaded binary
+                    if (not fw_file.closed):
+                        fw_file.close()
+
+                    # Re open port to the user with saved settings
+                    self.__ph.apply_settings(serial_settings)
+                    self.__ph.open()
+                    return True
+
+                else:
+                    raise Exception("MD5 Mismatch!")
+            else:
+                raise Exception("Could not fetch requested MD5 file! Check your connection to GitHub.")
+        else:
+            raise Exception("Could not found requested firmware files list! Check your connection to GitHub.")
+
+    def update_driver_baudrate(self, id: int, br: int):
+        """Update the baudrate of the driver with
+        given device ID. Following the method, the master
+        baudrate must be updated accordingly to initiate a
+        communication line with the board.
+
+        Args:
+            id (int): The device ID of the driver
+            br (int): New baudrate value
+
+        Raises:
+            ValueError: Baudrate is not valid
+        """
+
+        if (br < 3053) or (br > 12500000):
+            raise ValueError("{br} is not in acceptable range!")
+
+        self.set_variables(id, [[Index.Baudrate, br]])
+        time.sleep(self.__post_sleep)
+        self.eeprom_write(id)
+        time.sleep(self.__post_sleep)
+        self.reboot(id)
+
+    def get_driver_baudrate(self, id: int):
+        """ Get the current baudrate from the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the baudrate, otherwise None.
+        """
+        return self.get_variables(id, [Index.Baudrate])[0]
+
+    def update_master_baudrate(self, br: int):
+        """ Update the master serial port baudrate.
+
+        Args:
+            br (int): Baudrate in range [3053, 12500000]
+
+        Raises:
+            ValueError: Invalid baudrate
+            e: Unspecific exception
+        """
+
+        if (br < 3053) or (br > 12500000):
+            raise ValueError("{br} is not in acceptable range!")
+
+        try:
+            self.__ph.reset_input_buffer()
+            self.__ph.reset_output_buffer()
+            settings = self.__ph.get_settings()
+            self.__ph.close()
+            settings['baudrate'] = br
+            self.__ph.apply_settings(settings)
+            self.__ph.open()
+
+            self.__post_sleep = (10 / br) * 12
+
+        except Exception as e:
+            raise e
+
+    def attach(self, driver: Red):
+        """ Attach a SMD driver to the master to define access to it.
+
+        Args:
+            driver (Red): Driver to be attached
+        """
+        self.__driver_list[driver.vars[Index.DeviceID].value()] = driver
+
+    def detach(self, id: int):
+        """ Detach the SMD driver with given ID from master driver list.
+
+        Args:
+            id (int): The device ID of the driver to be detached.
+
+        Raises:
+            ValueError: Device ID is not valid
+        """
+        if (id < 0) or (id > 255):
+            raise ValueError("{} is not a valid ID!".format(id))
+
+        self.__driver_list[id] = Red(255)
+
+    def set_variables(self, id: int, idx_val_pairs=[], ack=False):
+        """ Set variables on the driver with given ID
+        with a list containing [Index, value] sublists. Index
+        is the parameter index and the value is the value attached to it.
+
+        Args:
+            id (int):  The device ID of the driver
+            idx_val_pairs (list, optional): List containing Index, value pairs. Defaults to [].
+            ack (bool, optional): Get acknowledge from the driver. Defaults to False.
+
+        Raises:
+            ValueError: Device ID is not valid
+            IndexError: The given list is empty
+            Exception: Error raised from operation on the list except empty list
+
+        Returns:
+            list | None: Return the list of written values if ack is True, otherwise None.
+        """
+
+        if (id < 0) or (id > 255):
+            raise ValueError("{} is not a valid ID!".format(id))
+        
+        if (id is not self.__driver_list[id].vars[Index.DeviceID].value()):
+            raise ValueError("{} is not an attached ID!".format(id))
+
+        if len(idx_val_pairs) == 0:
+            raise IndexError("Given id, value pair list is empty!")
+
+        try:
+            index_list = [pair[0] for pair in idx_val_pairs]
+            value_list = [pair[1] for pair in idx_val_pairs]
+        except Exception as e:
+            raise Exception(" Raised {} with args {}".format(e, e.args))
+
+        self.__write_bus(self.__driver_list[id].set_variables(index_list, value_list, ack))
+        if ack:
+            if self.__read_ack(id):
+                return [self.__driver_list[id].vars[index].value() for index in index_list]
+        time.sleep(self.__post_sleep)
+        return None
+
+    def get_variables(self, id: int, index_list: list):
+        """ Get variables from the driver with respect to given list
+
+        Args:
+            id (int): The device ID of the driver
+            index_list (list): A list containing the Indexes to read
+
+        Raises:
+            ValueError: Device ID is not valid
+            IndexError: The given list is empty
+
+        Returns:
+            list | None: Return the list of read values if any, otherwise None.
+        """
+
+        if (id < 0) or (id > 254):
+            raise ValueError("{} is not a valid ID!".format(id))
+        
+        if (id == self.__class__._BROADCAST_ID):
+            raise ValueError("Can't read with broadcast ID!")
+        
+        if (id is not self.__driver_list[id].vars[Index.DeviceID].value()):
+            raise ValueError("{} is not an attached ID!".format(id))
+
+        if len(index_list) == 0:
+            raise IndexError("Given index list is empty!")
+
+        self.__write_bus(self.__driver_list[id].get_variables(index_list))
+        time.sleep(self.__post_sleep)
+        if self.__read_ack(id):
+            return [self.__driver_list[id].vars[index].value() for index in index_list]
+        else:
+            return None
+
+    def __parse(self, data: bytes):
+        """ Parse the data which has passed the CRC check
+
+        Args:
+            data (bytes): Input data package in bytes
+        """
+
+        id = data[Index.DeviceID]
+        data = data[6:-4]
+
+        i = 0
+        while i < len(data):
+            fmt_str = '<B' + self.__driver_list[id].vars[data[i]].type()
+
+            sdata = data[i: i + self.__driver_list[id].vars[data[i]].size() + 1]
+            unpacked = list(struct.unpack(fmt_str, sdata))
+
+            self.__driver_list[id].vars[unpacked[0]].value(unpacked[1] if len(unpacked) <= 2 else unpacked[1::])
+            i += self.__driver_list[id].vars[data[i]].size() + 1
+
+    def __read_ack(self, id: int) -> bool:
+        """ Read acknowledge data from the driver with given ID.
+
+        Args:
+            id (int): The device ID of the driver
+
+        Returns:
+            bool: Return True if acknowledge is read and correct.
+        """
+
+        ret = self.__read_bus(self.__driver_list[id].get_ack_size())
+        if len(ret) == self.__driver_list[id].get_ack_size():
+            if CRC32.calc(ret[:-4]) == struct.unpack('<I', ret[-4:])[0]:
+                if ret[int(Index.PackageSize)] > 10:
+                    self.__parse(ret)
+                    return True
+                else:
+                    return True  # Ping package
+            else:
+                return False
+        else:
+            return False
+
+    def set_variables_sync(self, index: Index, id_val_pairs=[]):
+        dev = Red(self.__class__._BROADCAST_ID)
+        dev.vars[Index.Command].value(Commands.SYNC_WRITE)
+
+        fmt_str = '<' + ''.join([var.type() for var in dev.vars[:6]])
+        struct_out = list(struct.pack(fmt_str, *[var.value() for var in dev.vars[:6]]))
+
+        fmt_str += 'B'
+        struct_out += list(struct.pack('<B', int(index)))
+
+        for pair in id_val_pairs:
+            fmt_str += 'B'
+            struct_out += list(struct.pack('<B', pair[0]))
+            struct_out += list(struct.pack('<' + dev.vars[index].type(), pair[1]))
+
+        struct_out[int(Index.PackageSize)] = len(struct_out) + dev.vars[Index.CRCValue].size()
+        dev.vars[Index.CRCValue].value(CRC32.calc(struct_out))
+
+        self.__write_bus(bytes(struct_out) + struct.pack('<' + dev.vars[Index.CRCValue].type(), dev.vars[Index.CRCValue].value()))
+        time.sleep(self.__post_sleep)
+
+    def __set_variables_bulk(self, id: int):
+        raise NotImplementedError()
+
+    def __get_variables_bulk(self, id: int):
+        raise NotImplementedError()
+
+    def scan(self) -> list:
+        """ Scan the serial port and find drivers.
+
+        Returns:
+            list: Connected drivers.
+        """
+        self.__ph.reset_input_buffer()
+        self.__ph.reset_output_buffer()
+        self.__ph.timeout = 0.025
+        connected = []
+        for id in range(255):
+            self.attach(Red(id))
+            if self.ping(id):
+                connected.append(id)
+            else:
+                self.detach(id)
+        self.__ph.timeout = 0.1
+        self.__attached_drivers = connected
+        return connected
+
+    def reboot(self, id: int):
+        """ Reboot the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+        self.__write_bus(self.__driver_list[id].reboot())
+        time.sleep(self.__post_sleep)
+
+    def factory_reset(self, id: int):
+        """ Clear the EEPROM config of the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+        self.__write_bus(self.__driver_list[id].factory_reset())
+        time.sleep(self.__post_sleep)
+
+    def eeprom_write(self, id: int, ack=False):
+        """ Save the config to the EEPROM.
+
+        Args:
+            id (int): The device ID of the driver.
+            ack (bool, optional): Wait for acknowledge. Defaults to False.
+
+        Returns:
+            bool | None: Return True if ack returns
+                         Return False if ack does not return or incorrect
+                         Return None if ack is not requested.
+        """
+        self.__write_bus(self.__driver_list[id].EEPROM_write(ack=ack))
+        time.sleep(self.__post_sleep)
+
+        if ack:
+            if self.__read_ack(id):
+                return True
+            else:
+                return False
+        return None
+
+    def ping(self, id: int) -> bool:
+        """ Ping the driver with given ID.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            bool: Return True if device replies otherwise False.
+        """
+        self.__write_bus(self.__driver_list[id].ping())
+        time.sleep(self.__post_sleep)
+
+        if self.__read_ack(id):
+            return True
+        else:
+            return False
+
+    def reset_encoder(self, id: int):
+        """ Reset the encoder.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+        self.__write_bus(self.__driver_list[id].reset_encoder())
+        time.sleep(self.__post_sleep)
+
+    def scan_modules(self, id: int) -> list:
+        """ Get the list of sensor IDs which are connected to the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list: List of the protocol IDs of the connected sensors otherwise None.
+        """
+
+        _ID_OFFSETS = [[1, Index.Button_1], [6, Index.Light_1], [11, Index.Buzzer_1], [16, Index.Joystick_1], [21, Index.Distance_1], [26, Index.QTR_1], [31, Index.Servo_1], [36, Index.Pot_1], [41, Index.RGB_1], [46, Index.IMU_1]]
+        self.__write_bus(self.__driver_list[id].scan_modules())
+        time.sleep(5.5)
+        connected = None
+        for i in range(0,10):
+            try:
+                connected = self.get_variables(id, [Index.connected_bitfield])[0]
+                if connected == None:
+                    pass
+                else:
+                    break
+            except:
+                pass
+        if connected == None:
+            return None
+        else:
+            value1 = 0x12345678  # Örnek değer 1
+            value2 = 0x9ABCDEF0  # Örnek değer 2
+
+            # 64-bitlik tek bir değere dönüştürme
+            connected = (connected[1] << 32) | connected[0]
+            result = []
+            addrs = [i for i in range(64) if (connected & (1 << i)) == (1 << i)]
+            for addr in addrs:
+                result.append((Index(addr - _ID_OFFSETS[int((addr - 1) / 5)][0] + _ID_OFFSETS[int((addr - 1) / 5)][1])).name)
+            return result
+
+    def set_connected_modules(self, id: int, modules: list):
+        """ Set the list of sensor IDs which are connected to the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+            modules (list): List of the protocol IDs of the connected sensors.
+        """
+
+        #remove elements that has multiple ones in modules list
+        filtered_modules = list(set(modules))
+        print(filtered_modules)
+
+        ManualBuzzer_Byte = 0
+        ManualServo_Byte = 0
+        ManualRGB_Byte = 0
+        ManualButton_Byte = 0
+        ManualLight_Byte = 0
+        ManualJoystick_Byte = 0
+        ManualDistance_Byte = 0
+        ManualQTR_Byte = 0
+        ManualPot_Byte = 0
+        ManualIMU_Byte = 0
+        try:
+            for module in filtered_modules:
+                if "Buzzer" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Buzzer_2' ".format(module))
+                    ManualBuzzer_Byte += 2**(module_id - 1)
+                elif "Servo" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Servo_2' ".format(module))
+                    ManualServo_Byte += 2**(module_id - 1)
+                elif "RGB" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'RGB_2' ".format(module))
+                    ManualRGB_Byte += 2**(module_id - 1)
+                elif "Button" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Button_2' ".format(module))
+                    ManualButton_Byte += 2**(module_id - 1)
+                elif "Light" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Light_2' ".format(module))
+                    ManualLight_Byte += 2**(module_id - 1)
+                elif "Joystick" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Joystick_2' ".format(module))
+                    ManualJoystick_Byte += 2**(module_id - 1)
+                elif "Distance" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Distance_2' ".format(module))
+                    ManualDistance_Byte += 2**(module_id - 1)
+                elif "QTR" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'QTR_2' ".format(module))
+                    ManualQTR_Byte += 2**(module_id - 1)
+                elif "Pot" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'Pot_2' ".format(module))
+                    ManualPot_Byte += 2**(module_id - 1)
+                elif "IMU" in module:
+                    module_id = int(module[-1])
+                    if module_id <= 0 or module_id > 5:
+                        raise ValueError("{} invalid module ID! it should be between 1 and 5. for ex: 'IMU_2' ".format(module))
+                    ManualIMU_Byte += 2**(module_id - 1)           
+                else:
+                    raise ValueError("{} is not a Module with ID! for ex: 'Button_2' ".format(module))
+        except Exception as e:
+            raise e
+        
+        self.set_variables(id, [[Index.SetScanModuleMode, 1]])
+
+        self.set_variables(id, [[Index.SetManualBuzzer, ManualBuzzer_Byte]])
+        self.set_variables(id, [[Index.SetManualServo, ManualServo_Byte]])
+        self.set_variables(id, [[Index.SetManualRGB, ManualRGB_Byte]])
+        self.set_variables(id, [[Index.SetManualButton, ManualButton_Byte]])
+        self.set_variables(id, [[Index.SetManualLight, ManualLight_Byte]])
+        self.set_variables(id, [[Index.SetManualJoystick, ManualJoystick_Byte]])
+        self.set_variables(id, [[Index.SetManualDistance, ManualDistance_Byte]])
+        self.set_variables(id, [[Index.SetManualQTR, ManualQTR_Byte]])
+        self.set_variables(id, [[Index.SetManualPot, ManualPot_Byte]])
+        self.set_variables(id, [[Index.SetManualIMU, ManualIMU_Byte]])
+    
+        self.__write_bus(self.__driver_list[id].scan_modules())
+        time.sleep(self.__post_sleep)
+
+    def enter_bootloader(self, id: int):
+        """ Put the driver into bootloader mode.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+
+        self.__write_bus(self.__driver_list[id].enter_bootloader())
+        time.sleep(self.__post_sleep)
+
+    def get_driver_info(self, id: int):
+        """ Get hardware and software versions from the driver
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            dict | None: Dictionary containing versions or None.
+        """
+        st = dict()
+        data = self.get_variables(id, [Index.HardwareVersion, Index.SoftwareVersion])
+        if data is not None:
+            ver = list(struct.pack('<I', data[0]))
+            st['HardwareVersion'] = "v{1}.{2}.{3}".format(*ver[::-1])
+            ver = list(struct.pack('<I', data[1]))
+            st['SoftwareVersion'] = "v{1}.{2}.{3}".format(*ver[::-1])
+
+            self.__driver_list[id]._config = st
+            return st
+        else:
+            return None
+
+    def update_driver_id(self, id: int, id_new: int):
+        """ Update the device ID of the driver
+
+        Args:
+            id (int): The device ID of the driver
+            id_new (int): New device ID
+
+        Raises:
+            ValueError: Current or updating device IDs are not valid
+        """
+        if (id < 0) or (id > 254):
+            raise ValueError("{} is not a valid ID!".format(id))
+
+        if (id_new < 0) or (id_new > 254):
+            raise ValueError("{} is not a valid ID argument!".format(id_new))
+
+        self.__write_bus(self.__driver_list[id].update_driver_id(id_new))
+        time.sleep(self.__post_sleep)
+        self.eeprom_write(id_new)
+        time.sleep(self.__post_sleep)
+        self.reboot(id)
+
+    def enable_torque(self, id: int, en: bool):
+        """ Enable power to the motor of the driver.
+
+        Args:
+            id (int): The device ID of the driver
+            en (bool): Enable. True enables the torque.
+        """
+
+        self.set_variables(id, [[Index.TorqueEnable, en]])
+        time.sleep(self.__post_sleep)
+
+    def pid_tuner(self, id: int):
+        """ Start PID auto-tuning routine. This routine will estimate
+        PID coefficients for position and velocity control operation modes.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+        self.__write_bus(self.__driver_list[id].tune())
+        time.sleep(self.__post_sleep)
+
+    def set_operation_mode(self, id: int, mode: OperationMode):
+        """ Set the operation mode of the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+            mode (OperationMode): One of the PWM, Position, Velocity, Torque modes.
+        """
+
+        self.set_variables(id, [[Index.OperationMode, mode]])
+        time.sleep(self.__post_sleep)
+
+    def get_operation_mode(self, id: int):
+        """ Get the current operation mode from the driver.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the operation mode, otherwise None.
+        """
+        return self.get_variables(id, [Index.OperationMode])[0]
+
+    def set_shaft_cpr(self, id: int, cpr: float):
+        """ Set the count per revolution (CPR) of the motor output shaft.
+
+        Args:
+            id (int): The device ID of the driver.
+            cpr (float): The CPR value of the output shaft/
+        """
+        self.set_variables(id, [[Index.OutputShaftCPR, cpr]])
+        time.sleep(self.__post_sleep)
+
+    def get_shaft_cpr(self, id: int):
+        """ Get the count per revolution (CPR) of the motor output shaft.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the output shaft CPR, otherwise None.
+        """
+        return self.get_variables(id, [Index.OutputShaftCPR])[0]
+
+    def set_shaft_rpm(self, id: int, rpm: float):
+        """ Set the revolution per minute (RPM) value of the output shaft at 12V rating.
+
+        Args:
+            id (int): The device ID of the driver.
+            rpm (float): The RPM value of the output shaft at 12V
+        """
+        self.set_variables(id, [[Index.OutputShaftRPM, rpm]])
+        time.sleep(self.__post_sleep)
+
+    def get_shaft_rpm(self, id: int):
+        """ Get the revolution per minute (RPM) value of the output shaft at 12V rating.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the output shaft RPM characteristics, otherwise None.
+        """
+        return self.get_variables(id, [Index.OutputShaftRPM])[0]
+
+    def set_user_indicator(self, id: int):
+        """ Set the user indicator color for 5 seconds. The user indicator color is cyan.
+
+        Args:
+            id (int): The device ID of the driver.
+        """
+        self.set_variables(id, [[Index.UserIndicator, 1]])
+        time.sleep(self.__post_sleep)
+
+    def set_position_limits(self, id: int, plmin: int, plmax: int):
+        """ Set the position limits of the motor in terms of encoder ticks.
+        Default for min is -2,147,483,648 and for max is 2,147,483,647.
+        The torque ise disabled if the value is exceeded so a tolerence
+        factor should be taken into consideration when setting this values. 
+
+        Args:
+            id (int): The device ID of the driver.
+            plmin (int): The minimum position limit.
+            plmax (int): The maximum position limit.
+        """
+        self.set_variables(id, [[Index.MinimumPositionLimit, plmin], [Index.MaximumPositionLimit, plmax]])
+        time.sleep(self.__post_sleep)
+
+    def get_position_limits(self, id: int):
+        """ Get the position limits of the motor in terms of encoder ticks.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the position limits, otherwise None.
+        """
+        return self.get_variables(id, [Index.MinimumPositionLimit, Index.MaximumPositionLimit])
+
+    def set_torque_limit(self, id: int, tl: int):
+        """ Set the torque limit of the driver in terms of milliamps (mA).
+        Torque is disabled after a timeout if the current drawn is over the
+        given torque limit. Default torque limit is 65535.
+
+        Args:
+            id (int): The device ID of the driver.
+            tl (int): New torque limit (mA)
+        """
+        self.set_variables(id, [[Index.TorqueLimit, tl]])
+        time.sleep(self.__post_sleep)
+
+    def get_torque_limit(self, id: int):
+        """ Get the torque limit from the driver in terms of milliamps (mA).
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the torque limit, otherwise None.
+        """
+        return self.get_variables(id, [Index.TorqueLimit])[0]
+
+    def set_velocity_limit(self, id: int, vl: int):
+        """ Set the velocity limit for the motor output shaft in terms of RPM. The velocity limit
+        applies only in velocity mode. Default velocity limit is 65535.
+
+        Args:
+            id (int): The device ID of the driver.
+            vl (int): New velocity limit (RPM)
+        """
+        self.set_variables(id, [[Index.VelocityLimit, vl]])
+        time.sleep(self.__post_sleep)
+
+    def get_velocity_limit(self, id: int):
+        """ Get the velocity limit from the driver in terms of RPM.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the velocity limit, otherwise None.
+        """
+        return self.get_variables(id, [Index.VelocityLimit])[0]
+
+    def set_position(self, id: int, sp: int):
+        """ Set the desired setpoint for the position control in terms of encoder ticks.
+
+        Args:
+            id (int): The device ID of the driver.
+            sp (int | float): Position control setpoint.
+        """
+        self.set_variables(id, [[Index.PositionControlMode, 0],[Index.SetPosition, sp]])
+        time.sleep(self.__post_sleep)
+
+    def get_position(self, id: int):
+        """ Get the current position of the motor from the driver in terms of encoder ticks.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the current position, otherwise None.
+        """
+        return self.get_variables(id, [Index.PresentPosition])[0]
+    
+    def goTo(self, id: int, target_position, time_ = 0, maxSpeed = 0, accel = 0, 
+             blocking: bool = False, encoder_tick_close_counter = 10):
+        """
+            # goTo: 
+
+            Sets the target position in S Curve mode. Since this function controls motor in position, 
+            device should be in Position Mode to use this func.
+
+            If you just want to drive the motor to target point smoothly, you can use just the target_position parameter only.
+            If other parameters are not given or they are 0 (time, maxSpeed, accel), it will use default speed and acceleration values based on the motor's RPM.
+            
+            If the setpoint, time, maxSpeed, and accel parameters are specified in a way that makes it impossible to reach the target in the given time, 
+            the time variable will be ignored.
+
+            If only the time is not provided, the movement will be executed according to the other given parameters.
+
+            It is not necessary for the speed to reach the maxSpeed value during the movement. 
+            The maxSpeed parameter is only a limitation. Due to the other given parameters, it might be impossible to reach the maxSpeed value during the movement. 
+            Note: The motor's RPM value is defined as maxSpeed within the SMD.
+
+            If blocking is True, the function will wait until the motor reaches the target position.
+            If blocking is False, the function will return immediately.
+
+            Args:
+                id (int): The device ID of the driver.
+                target_position (int | float): Position control setpoint.
+                time (int | float): Time in seconds.
+                maxSpeed (int | float): Maximum speed in RPM.
+                accel (int | float): Acceleration in RPM/s.
+                blocking (bool): If True, the function will wait until the motor reaches the target position.
+                encoder_tick_close_counter (int): The number of encoder ticks that the motor should close enough to the target position to be considered reached.
+        """
+
+        self.set_variables(id, [[Index.PositionControlMode, 1]])
+        self.set_variables(id, [[Index.SCurveTime, time_],[Index.SCurveMaxVelocity, maxSpeed],[Index.ScurveAccel, accel]])
+        self.set_variables(id, [[Index.SCurveSetpoint, target_position]])
+
+        time.sleep(self.__post_sleep)
+
+        while(blocking):
+            if (abs(target_position - self.get_position(id)) <= encoder_tick_close_counter):
+                break
+        
+    def goTo_ConstantSpeed(self, id: int, target_position, speed,
+                           blocking: bool = False, encoder_tick_close_counter = 10):
+        """
+            # goTo_ConstantSpeed: 
+
+            Sets the target position and sets the accel to max accel in S Curve mode. So velocity reaches given speed immediately.
+
+            If blocking is True, the function will wait until the motor reaches the target position.
+            If blocking is False, the function will return immediately.
+
+            Args:
+                id (int): The device ID of the driver.
+                target_position (int | float): Position control setpoint.
+                speed (int | float): Maximum speed in RPM.
+                blocking (bool): If True, the function will wait until the motor reaches the target position.
+                encoder_tick_close_counter (int): The number of encoder ticks that the motor should close enough to the target position to be considered reached.
+        """
+        
+        self.set_variables(id, [[Index.VelocityControlMode, 1]])
+        self.set_variables(id, [[Index.SCurveMaxVelocity, speed],[Index.ScurveAccel, MotorConstants.MAX_ACCEL]])
+        self.set_variables(id, [[Index.SCurveSetpoint, target_position]])
+
+        time.sleep(self.__post_sleep)
+
+        while(blocking):
+            if (abs(target_position - self.get_position(id)) <= encoder_tick_close_counter):
+                break
+
+    def set_velocity(self, id: int, sp: float, accel = 0):
+        """ Set the desired setpoint for the velocity control in terms of RPM.
+
+        Args:
+            id (int): The device ID of the driver.
+            sp (int | float): Velocity control setpoint.
+            accel(float): sets the acceleration value for the velocity control in terms of (RPM/seconds). if accel is not given, it will be ignored. 
+            So previously set accel value will be used.
+            In initial SMD-RED Velocity Control Mode, accel will be set to MAX_ACCEL.
+
+        Hint: 
+            It can be used to set the acceleration value by "MotorConstants.MAX_ACCEL" to reach the target velocity immediately.
+        """
+        if accel == MotorConstants.MAX_ACCEL:
+            accel = 0
+            self.set_variables(id, [[Index.SetVelocityAcceleration, accel]])
+            self.set_variables(id, [[Index.SetVelocity, sp]])
+
+        elif accel == 0:
+            self.set_variables(id, [[Index.SetVelocity, sp]])
+        else:
+            self.set_variables(id, [[Index.SetVelocityAcceleration, accel]])
+            self.set_variables(id, [[Index.SetVelocity, sp]])
+        
+        time.sleep(self.__post_sleep)
+
+    def get_velocity(self, id: int):
+        """ Get the current velocity of the motor output shaft from the driver in terms of RPM.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the current velocity, otherwise None.
+        """
+        return self.get_variables(id, [Index.PresentVelocity])[0]
+
+    def set_torque(self, id: int, sp: float):
+        """ Set the desired setpoint for the torque control in terms of milliamps (mA).
+
+        Args:
+            id (int): The device ID of the driver.
+            sp (int | float): Torque control setpoint.
+        """
+        self.set_variables(id, [[Index.SetTorque, sp]])
+        time.sleep(self.__post_sleep)
+
+    def get_torque(self, id: int):
+        """ Get the current drawn from the motor from the driver in terms of milliamps (mA).
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the current, otherwise None.
+        """
+        return self.get_variables(id, [Index.MotorCurrent])[0]
+
+    def set_duty_cycle(self, id: int, pct: float):
+        """ Set the duty cycle to the motor for PWM control mode in terms of percentage.
+        Negative values will change the motor direction.
+
+        Args:
+            id (int): The device ID of the driver.
+            pct (int | float): Duty cycle percentage.
+        """
+        self.set_variables(id, [[Index.SetDutyCycle, pct]])
+        time.sleep(self.__post_sleep)
+
+    def get_analog_port(self, id: int):
+        """ Get the ADC values from the analog port of the device with
+        10 bit resolution. The value is in range [0, 4095].
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list containing the ADC conversion of the port, otherwise None.
+        """
+        return self.get_variables(id, [Index.AnalogPort])[0]
+
+    def set_control_parameters_position(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None):
+        """ Set the control block parameters for position control mode.
+        Only assigned parameters are written, None's are ignored. The default
+        max output limit is 950.
+
+        Args:
+            id (int): The device ID of the driver.
+            p (float): Proportional gain. Defaults to None.
+            i (float): Integral gain. Defaults to None.
+            d (float): Derivative gain. Defaults to None.
+            db (float): Deadband (of the setpoint type). Defaults to None.
+            ff (float): Feedforward. Defaults to None.
+            ol (float): Maximum output limit. Defaults to None.
+        """
+        index_list = [Index.PositionPGain, Index.PositionIGain, Index.PositionDGain, Index.PositionDeadband, Index.PositionFF, Index.PositionOutputLimit]
+        val_list = [p, i, d, db, ff, ol]
+
+        self.set_variables(id, [list(pair) for pair in zip(index_list, val_list) if pair[1] is not None])
+        time.sleep(self.__post_sleep)
+
+    def get_control_parameters_position(self, id: int):
+        """ Get the position control block parameters.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list [P, I, D, FF, DB, OUTPUT_LIMIT], otherwise None.
+        """
+
+        return self.get_variables(id, [Index.PositionPGain, Index.PositionIGain, Index.PositionDGain, Index.PositionDeadband, Index.PositionFF, Index.PositionOutputLimit])
+
+    def set_control_parameters_velocity(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None):
+        """ Set the control block parameters for velocity control mode.
+        Only assigned parameters are written, None's are ignored. The default
+        max output limit is 950.
+
+        Args:
+            id (int): The device ID of the driver.
+            p (float): Proportional gain. Defaults to None.
+            i (float): Integral gain. Defaults to None.
+            d (float): Derivative gain. Defaults to None.
+            db (float): Deadband (of the setpoint type). Defaults to None.
+            ff (float): Feedforward. Defaults to None.
+            ol (float): Maximum output limit. Defaults to None.
+        """
+        index_list = [Index.VelocityPGain, Index.VelocityIGain, Index.VelocityDGain, Index.VelocityDeadband, Index.VelocityFF, Index.VelocityOutputLimit]
+        val_list = [p, i, d, db, ff, ol]
+
+        self.set_variables(id, [list(pair) for pair in zip(index_list, val_list) if pair[1] is not None])
+        time.sleep(self.__post_sleep)
+
+    def get_control_parameters_velocity(self, id: int):
+        """ Get the velocity control block parameters.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list [P, I, D, FF, DB, OUTPUT_LIMIT], otherwise None.
+        """
+        return self.get_variables(id, [Index.VelocityPGain, Index.VelocityIGain, Index.VelocityDGain, Index.VelocityDeadband, Index.VelocityFF, Index.VelocityOutputLimit])
+
+    def set_control_parameters_torque(self, id: int, p=None, i=None, d=None, db=None, ff=None, ol=None):
+        """ Set the control block parameters for torque control mode.
+        Only assigned parameters are written, None's are ignored. The default
+        max output limit is 950.
+
+        Args:
+            id (int): The device ID of the driver.
+            p (float): Proportional gain. Defaults to None.
+            i (float): Integral gain. Defaults to None.
+            d (float): Derivative gain. Defaults to None.
+            db (float): Deadband (of the setpoint type). Defaults to None.
+            ff (float): Feedforward. Defaults to None.
+            ol (float): Maximum output limit. Defaults to None.
+        """
+        index_list = [Index.TorquePGain, Index.TorqueIGain, Index.TorqueDGain, Index.TorqueDeadband, Index.TorqueFF, Index.TorqueOutputLimit]
+        val_list = [p, i, d, db, ff, ol]
+
+        self.set_variables(id, [list(pair) for pair in zip(index_list, val_list) if pair[1] is not None])
+        time.sleep(self.__post_sleep)
+
+    def get_control_parameters_torque(self, id: int):
+        """ Get the torque control block parameters.
+
+        Args:
+            id (int): The device ID of the driver.
+
+        Returns:
+            list | None: Returns the list [P, I, D, FF, DB, OUTPUT_LIMIT], otherwise None.
+        """
+        return self.get_variables(id, [Index.TorquePGain, Index.TorqueIGain, Index.TorqueDGain, Index.TorqueDeadband, Index.TorqueFF, Index.TorqueOutputLimit])
+
+    def get_button(self, id: int, module_id: int):
+        """ Get the button module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the button.
+
+        Raises:
+            InvalidIndexError: Index is not a button module index
+
+        Returns:
+            int: Returns the button state
+        """
+        index =  module_id + Index.Button_1 - 1
+        if (index < Index.Button_1) or (index > Index.Button_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+    def get_light(self, id: int, module_id: int):
+        """ Get the ambient light module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the ambient light.
+
+        Raises:
+            InvalidIndexError: Index is not a light module index
+
+        Returns:
+            float: Returns the ambient light measurement (in lux)
+        """
+        index =  module_id + Index.Light_1 - 1
+        if (index < Index.Light_1) or (index > Index.Light_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+    def set_buzzer(self, id: int, module_id: int, note_frequency: int):
+        """ Set the note frequency of the buzzer module with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the buzzer.
+            note_frequency (int): The frequency of the tone in Hertz.
+
+        Raises:
+            InvalidIndexError: Index is not a buzzer module index
+        """
+        if note_frequency < 0 :
+            print("note frequency cannot be negative!")
+            raise InvalidIndexError()
+        
+        index =  module_id + Index.Buzzer_1 - 1
+        if (index < Index.Buzzer_1) or (index > Index.Buzzer_5):
+            raise InvalidIndexError()
+        self.set_variables(id, [[index, note_frequency]])
+        time.sleep(self.__post_sleep)
+
+    def get_joystick(self, id: int, module_id: int):
+        """ Get the joystick module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the joystick.
+
+        Raises:
+            InvalidIndexError: Index is not a joystick module index
+
+        Returns:
+            list: Returns the joystick module analogs and button data
+        """
+        index =  module_id + Index.Joystick_1 - 1
+        if (index < Index.Joystick_1) or (index > Index.Joystick_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+    def get_distance(self, id: int, module_id: int):
+        """ Get the ultrasonic distance module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the ultrasonic distance module.
+
+        Raises:
+            InvalidIndexError: Index is not a ultrasonic distance module index
+
+        Returns:
+            int: Returns the distance from the ultrasonic distance module (in cm)
+        """
+        index =  module_id + Index.Distance_1 - 1
+        if (index < Index.Distance_1) or (index > Index.Distance_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+    def get_qtr(self, id: int, module_id: int):
+        """ Get the QTR module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the QTR.
+
+        Raises:
+            InvalidIndexError: Index is not a QTR module index
+
+        Returns:
+            list: Returns QTR module data: [Left(bool), Middle(bool), Right(bool)]
+        """
+        index =  module_id + Index.QTR_1 - 1
+        if (index < Index.QTR_1) or (index > Index.QTR_5):
+            raise InvalidIndexError()
+
+        data = self.get_variables(id, [index])
+        if data is not None:
+            #return [(data[0] & (1 << i)) >> i for i in range(3)]
+            return data[0]
+        else:
+            return None
+
+    def set_servo(self, id: int, module_id: int, val: int):
+        """ Move servo module to a position.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the servo.
+            val (int): The value to write to the servo
+
+        Raises:
+            ValueError: Value should be in range [0, 255]
+            InvalidIndexError: Index is not a servo module index
+        """
+        if val < 0 or val > 255:
+            raise ValueError()
+        index =  module_id + Index.Servo_1 - 1
+        if (index < Index.Servo_1) or (index > Index.Servo_5):
+            raise InvalidIndexError()
+        self.set_variables(id, [[index, val]])
+        time.sleep(self.__post_sleep)
+
+    def get_potentiometer(self, id: int, module_id: int):
+        """ Get the potentiometer module data with given module ID.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the potentiometer.
+
+        Raises:
+            InvalidIndexError: Index is not a potentiometer module index
+
+        Returns:
+            int: Returns the ADC conversion from the potentiometer module
+        """
+        index =  module_id + Index.Pot_1 - 1
+        if (index < Index.Pot_1) or (index > Index.Pot_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+    def set_rgb(self, id: int, module_id: int, red: int, green: int, blue: int):
+        """ Set the colour emitted from the RGB module.
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the RGB.
+            red (int): The color level of red. [0,255]
+            green (int): The color level of green. [0,255]
+            blue (int): The color level of blue. [0,255]
+        Raises:
+            ValueError: Color is invalid
+            InvalidIndexError: Index is not a RGB module index
+        """
+
+        if red < 0 or red > 255:
+            raise ValueError("RGB color values must be in range 0 - 255")
+        if green < 0 or green > 255:
+            raise ValueError("RGB color values must be in range 0 - 255")
+        if blue < 0 or blue > 255:
+            raise ValueError("RGB color values must be in range 0 - 255")
+        
+        color_RGB = red + green*(2**8) + blue*(2**16)
+
+        index =  module_id + Index.RGB_1 - 1
+        if (index < Index.RGB_1) or (index > Index.RGB_5):
+            raise InvalidIndexError()
+        self.set_variables(id, [[index, color_RGB]])
+        time.sleep(self.__post_sleep)
+
+    def get_imu(self, id: int, module_id: int):
+        """ Get IMU module data (roll, pitch)
+
+        Args:
+            id (int): The device ID of the driver.
+            module_id (int): The module ID of the IMU.
+
+        Raises:
+            InvalidIndexError: Index is not a IMU module index
+
+        Returns:
+            list: Returns roll, pitch angles
+        """
+        index =  module_id + Index.IMU_1 - 1
+
+        if (index < Index.IMU_1) or (index > Index.IMU_5):
+            raise InvalidIndexError()
+
+        ret = self.get_variables(id, [index])
+        if ret is None:
+            return ret
+        return ret[0]
+
+'''
+'''--- tests/__init__.py ---
+
+'''
+'''--- tests/test_red.py ---
+import unittest
+import unittest.mock
+from unittest.mock import patch
+from smd import red
+
+class TestRed(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.dev = red.Red(1)
+
+    def tearDown(self) -> None:
+        pass
+
+    def test_set_variables(self):
+        pass
+
+    def test_get_variables(self):
+        pass
+
+    def test_reboot(self):
+        pass
+
+    def test_EEPROM_write(self):
+        pass
+
+    def test_ping(self):
+        pass
+
+    def change_id(self):
+        pass
+
+class TestMaster(unittest.TestCase):
+    def setUp(self) -> None:
+        patcher = patch("smd.red.serial.Serial", autospec=True)
+        self.mock = patcher.start()
+        self.addCleanup(patcher.stop)
+        self.mock.reset_mock()
+
+    def tearDown(self) -> None:
+        pass
+
+    def test_set_variables(self):
+        pass
+
+    def test_get_variables(self):
+        pass
+
+    def test_reboot(self):
+        pass
+
+    def test_EEPROM_write(self):
+        pass
+
+    def test_ping(self):
+        pass
+
+    def test_update_baudrate(self):
+        pass
+
+'''

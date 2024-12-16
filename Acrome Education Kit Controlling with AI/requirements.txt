@@ -1,0 +1,17 @@
+torch
+transformers
+huggingface-hub
+chromadb
+langchain
+pillow
+opencv-python
+groq
+python-dotenv
+pyserial
+tabulate
+pygame
+PyAutoGUI
+numpy
+opencv-contrib-python
+acrome-smd
+pyinstaller

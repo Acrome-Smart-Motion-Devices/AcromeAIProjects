@@ -1,0 +1,10 @@
+flask
+acrome-smd
+pyinstaller
+groq
+pyserial
+acrome-smd
+pyinstaller
+requests
+PyQt6
+pyaudio
