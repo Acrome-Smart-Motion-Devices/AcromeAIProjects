@@ -298,11 +298,11 @@ def execute_command():
         x, y, angle = robot_controller.linear_movement(cm,speed)
     elif command_id == "2":
         degree = data.get("degree", 0)
-        rotation_speed= data.get("rotation_speed",20)
+        rotation_speed= data.get("rotation_speed",30)
         x, y, angle = robot_controller.turn_left(degree,rotation_speed)
     elif command_id == "3":
         degree = data.get("degree", 0)
-        rotation_speed= data.get("rotation_speed",20)
+        rotation_speed= data.get("rotation_speed",30)
         x, y, angle = robot_controller.turn_right(degree,rotation_speed)
     elif command_id == "4":
         radius = data.get("radius", 0)
