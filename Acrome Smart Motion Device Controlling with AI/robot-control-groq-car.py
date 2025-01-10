@@ -119,10 +119,16 @@ def execute_function(response):
                 init_robot()
             elif function == "linear_movement":
                 linear_movement(parameters.get("cm", 0), parameters.get("speed", 30))
-            elif function == "turn":
-                turn(parameters.get("degree", 20), parameters.get("rotation_speed", 20))
+            elif function == "turn_left":
+                turn_left(parameters.get("degree", 90), parameters.get("rotation_speed", 30))
+            elif function=="turn_right":
+                turn_right(parameters.get("degree", 90), parameters.get("rotation_speed", 30))
             elif function == "radial_movement":
                 radial_movement(parameters.get("radius", 0), parameters.get("degree", 0))
+            elif function== "distance_movement":
+                distance_movement(parameters.get("cm",15))
+            elif function =="stop":
+                stop()
             else:
                 raise ValueError("Unknown function")
         except Exception as e:
