@@ -46,39 +46,53 @@ def linear_movement(cm: int = 0, speed: int = 30):
     data = out.json()
     return data
 
-def turn(degree: int = 0, rotation_speed: int = 20):
+def turn_left(degree: int = 90, rotation_speed: int = 30):
     out = requests.post(robotip, json={"id": "2", "degree": degree, "rotation_speed": rotation_speed})
     data = out.json()
     return data
-
-def radial_movement(radius: int, degree: int):
-    out = requests.post(robotip, json={"id": "3", "radius": radius, "degree": degree})
+def turn_right(degree: int=90,rotation_speed: int=30):
+    out = requests.post(robotip, json={"id": "3", "degree": degree, "rotation_speed": rotation_speed})
     data = out.json()
     return data
-
-
+def radial_movement(radius: int, degree: int):
+    out = requests.post(robotip, json={"id": "4", "radius": radius, "degree": degree})
+    data = out.json()
+    return data
+def distance_movement(cm: int=15):
+    out = requests.post(robotip,json={"id":"5","cm":cm})
+    data = out.json()
+    return data
+def stop():
+    out = requests.post(robotip,json={"id":"6"})
+    data = out.json()
+    return data
 function_instructions = """
 You are a robot control assistant. For each question, you should return a JSON object in the following format:
-{
-    "function": "function_name",
-    "parameters": {
-        "parameter1": value1,
-        "parameter2": value2
+[
+    {
+        "function": "function_name",
+        "parameters": {
+            "parameter1": value1,
+            "parameter2": value2
+        }
     }
-}
+]
 
 Available functions:
 1. init_robot - Initializes the robot's position. No parameters.
-2. linear_movement - Moves the robot a specified distance in cm.
-    - Parameters: cm (int) - Distance to move in cm, speed(int)
-3. turn - Turns the robot a specified degree.
-    - Parameters: degree (int) - Degree to turn, rotation_speed(int) - rotation_speed
-4. radial_movement - Moves the robot along a circular path with a given radius and angle.
-    - Parameters: radius (int), degree (int)
-If rotation_speed or speed does not give. You can use rotation_speed=20 and speed=30
-NOTE: Do not forget to use the functions in the correct order to achieve the desired result. 
-      The first function you should use is the init_robot function.And then you can use another functions (İt is important)
-      And please just JSON formula and first function is init_robot. Don't forget to put this sign at the beginning [ and at the end ]
+2. linear_movement - Moves the robot a specified distance in cm. If user dont write speed you should use default value. (default value is:30)\n
+    - Parameters: cm (int) - Distance to move in cm, speed (int)\n
+3. turn_left - Turns the robot a specified degree counterclockwise (left). If the user doesn't write speed, you should use the default value (default value is: 30).\n
+    - Parameters: degree (int) - Degree to turn, rotation_speed (int)\n
+4. turn_right - Turns the robot a specified degree clockwise (right). If the user doesn't write speed, you should use the default value (default value is: 30).\n
+    - Parameters: degree (int) - Degree to turn, rotation_speed (int)\n
+5. radial_movement - Moves the robot along a circular path with a given radius and angle.\n
+    - Parameters: radius (int), degree (int)\n
+6. distance_movement -If you encounter an obstacle while moving straight ahead, let it follow the other function. Eg: For example, turn right function when approaching 20 cm\n
+    - Parameters: cm(int)\n
+7. stop - Stop the robot. No parameters.
+NOTE: The first function have to be `init_robot`. Other functions will come after init_robot function.\n
+NOTE: Understand the prompt given by the user\n
 """
 
 def get_groq_response(prompt):
